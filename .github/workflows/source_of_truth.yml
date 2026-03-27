@@ -12,10 +12,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v4
+
       - name: Fetch repo tree (API)
         run: |
-          curl -s -H "Authorization: token ${{github.token}}" \
-            "https://api.github.com/repos/${{github.repository}}/git/trees/main?recursive=1" > tree.json
+          curl -s -H "Authorization: token ${{ github.token }}"             "https://api.github.com/repos/${{ github.repository }}/git/trees/main?recursive=1" > tree.json
 
       - name: Build SOT (Python)
         run: |
