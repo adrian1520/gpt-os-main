@@ -1,4 +1,4 @@
-name: api-write
+name: api_write
 description: Safe GitHub API writer (WRITE LOCK)
 
 inputs:
@@ -12,14 +12,27 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Get existing file SHA (if exists)
+      shell: bash
+      run: |
+        set -e
+        RESPONSE=$(curl -s -H "Authorization: token ${{ github.token }}"           https://api.github.com/repos/${{ github.repository }}/contents/${{ inputs.path }} || true)
+
+        SHA=$(echo "$RESPONSE" | jq -r '.sha // empty')
+        echo "SHA=$SHA" >> $GITHUB_ENV
+
     - name: Build payload
       shell: bash
       run: |
-        payload=$(jq -n           --arg msg "${{ inputs.message }}"           --arg path "${{ inputs.path }}"           --arg content "${{ inputs.content }}"           '{message: $msg, path: $path, content: $content}')
+        if [ -z "$SHA" ]; then
+          payload=$(jq -n             --arg msg "${{ inputs.message }}"             --arg content "${{ inputs.content }}"             '{message:$msg, content:$content}')
+        else
+          payload=$(jq -n             --arg msg "${{ inputs.message }}"             --arg content "${{ inputs.content }}"             --arg sha "$SHA"             '{message:$msg, content:$content, sha:$sha}')
+        fi
 
         echo "PAYLOAD=$payload" >> $GITHUB_ENV
 
-    - name: Upload via API
+    - name: Write via API
       shell: bash
       run: |
-        curl -i -X PUT           -H "Authorization: token ${{github.token}}"           -H "Content-Type: application/json"           -d "$PAYLOAD"           "https://api.github.com/repos/${{github.repository}}/contents/${{ inputs.path }}"
+        curl -s -X PUT           -H "Authorization: token ${{ github.token }}"           -H "Content-Type: application/json"           -d "$PAYLOAD"           https://api.github.com/repos/${{ github.repository }}/contents/${{ inputs.path }}
