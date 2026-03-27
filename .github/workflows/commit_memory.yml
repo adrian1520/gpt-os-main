@@ -1,4 +1,4 @@
-name: Commit Memory Engine
+name: Commit Memory API-ONLY
 
 on:
   push:
@@ -13,47 +13,27 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
 
-      - name: Config git
-        run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "actions@github.com"
-
-      - name: Create run branch
-        run: |
-          BRANCH="run/$(date +%s)"
-          echo "BRANCH=$BRANCH" >> $GITHUB_ENV
-          git checkout -b $BRANCH
-
-      - name: Extract git changes
+      - name: Extract changes
         run: |
           git log -1 --pretty="%s" > commit.txt
-          git diff --name-only HEAD^1 HEAD > files.txt
+          git diff --name-only AHEAD HEAD | cat > files.txt
 
-      - name: Build memory
+      - name: Build JSON
         run: |
-          mkdir -p memory
-          NOW=$(date -Is)
+          now=$(date -Is)
           files=$(tr '\n' ',' < files.txt | sed 's/,$//')
-          echo "{\"timestamp\": \"$NOW\", \"files\": \"$files\"}" >> memory/history_log.json
-          echo "{\"last_update\": \"$NOW\", \"files\": \"$files\"}" > memory/system_context.json
- 
-      - name: Commit memory on branch
-        run: |
-          git add memory/history_log.json memory/system_context.json
-          git commit -m "memory update [skip ci]" || echo "no changes"
-          git push origin $BRANCH
+          echo "{\"timestamp\": \"$now\", \"files\": \"$files\"}" > history.json
 
-      - name: Merge to main
+      - name: Encode base64
         run: |
-          git fetch origin main
-          git checkout main
-          git pull --rebase origin main
-          git merge --no-ff origin/$BRANCH
-          git push origin main
- 
-      - name: Cleanup branch
+          content=$(base64 -w 0 history.json)
+          echo "CONTENT=$content" >> $GITHUB_ENV
+
+      - name: Upload via API
         run: |
-          git push origin --delete $BRANCH || echo "branch not deleted"
+          curl -X PUT -s \
+            -H "Authorization: token ${{github.token}}" \
+            -h "Content-Type: application/json" \
+            -d "{\n  \"message\": \"commit memory api update\",\n  \"path\": \"memory/history_log.json\",\n  \"content\": \"${CONTENT}\"\n}" \
+            "https://api.github.com/repos/${{ github.repository }}/contents/memory/history_log.json"
