@@ -12,15 +12,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v4
+
       - name: Build debug json
         run: |
           now=$(date -Is)
-          cat <<EOF > debug.json
-          {
-            "run_id": "${{ github.run_id }}",
-            "timestamp": "$now"
-          }
-          EOF
+          printf '{"run_id":"%s","timestamp":"%s"}\n' "${{ github.run_id }}" "$now" > debug.json
 
       - name: Encode base64
         run: |
