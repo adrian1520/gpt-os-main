@@ -1,0 +1,25 @@
+name: api-write
+description: Safe GitHub API writer (WRITE LOCK)
+
+inputs:
+  path:
+    required: true
+  content:
+    required: true
+  message:
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Build payload
+      shell: bash
+      run: |
+        payload=$(jq -n           --arg msg "${{ inputs.message }}"           --arg path "${{ inputs.path }}"           --arg content "${{ inputs.content }}"           '{message: $msg, path: $path, content: $content}')
+
+        echo "PAYLOAD=$payload" >> $GITHUB_ENV
+
+    - name: Upload via API
+      shell: bash
+      run: |
+        curl -i -X PUT           -H "Authorization: token ${{github.token}}"           -H "Content-Type: application/json"           -d "$PAYLOAD"           "https://api.github.com/repos/${{github.repository}}/contents/${{ inputs.path }}"
