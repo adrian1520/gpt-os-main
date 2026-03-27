@@ -15,7 +15,12 @@ jobs:
       - name: Build debug json
         run: |
           now=$(date -Is)
-          echo "{"run_id":"${{ github.run_id }}","timestamp":"$now"}" > debug.json
+          cat <<EOF > debug.json
+          {
+            "run_id": "${{ github.run_id }}",
+            "timestamp": "$now"
+          }
+          EOF
 
       - name: Encode base64
         run: |
