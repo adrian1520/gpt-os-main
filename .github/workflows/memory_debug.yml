@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@3
+        uses: actions/checkout@3v3
 
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
@@ -23,12 +23,12 @@ jobs:
           RUN_ID=${{ github.event.workflow_run.id }}
           curl -s -H "Authorization: token ${{github.token}}" \
             "https://api.github.com/repos/${{github.repository}}/actions/runs/$RUN_ID/jobs" > jobs.json
- 
+
       - name: Extract failed step
         run: |
           failed_step=$(jq -r '.jobs[].steps[] | select(.conclusion=="failure") | .name' jobs.json | head -n1 )
           echo "FAILED_STEP=$failed_step" >> $GITHUB_ENV
-        
+
       - name: Fetch logs
         run: |
           RUN_ID=${{ github.event.workflow_run.id }}
@@ -42,8 +42,8 @@ jobs:
         run: |
           mkdir -p memory
           NOW=$(date -Is)
-          echo "{\"run_id\": \"${{ github.event.workflow_run.id }}\", \"failed_step\": \"${env.FAILED_STEP}\", \"error\": \"${env.ERROR_\", \"timestamp\": \"$NOW\"}" >> memory/debug_log.json
-
+          echo "{\"run_id\": \"${{ github.event.workflow_run.id }}\", \"failed_step\": \"${env.FAILED_STEP}\", \"error\": \"${env.ERROR}\", \"timestamp\": \"$NOW\"}" >> memory/debug_log.json
+ 
       - name: Commit
         run: |
           git config --global user.name "github-actions"
