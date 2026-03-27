@@ -1,4 +1,4 @@
-name: Dynamic System Context
+name: Dynamic System Context API-ONLY
 
 on:
   push:
@@ -9,19 +9,25 @@ on:
 jobs:
   update:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 2
 
-      - name: Update context
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build JSON
         run: |
-          now$=$(date -Is)\
-          echo "{\"updated_at\": \"$now\"}" > memory/system_context.json
-      - name: Commit
+          now=$(date -Is)
+          echo "{\"updated_at\": \"$now\"}" > context.json
+
+      - name: Encode base64
         run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "actions@github.com"
-          git add memory/system_context.json
-          git commit -m "update system context" || echo "no changes"
-          git push
+          content=$(base64 -w 0 context.json)
+          echo "CONTENT=$content" >> $GITHUB_ENV
+
+      - name: Upload via API
+        run: |
+          curl -X PUT -s \
+            -H "Authorization: token ${{github.token}}" \
+            -h "Content-Type: application/json" \
+            -d "{\n  \"message\": \"system context api update\",\n  \"path\": \"memory/system_context.json\",\n  \"content\": \"${CONTENT}\"\n}" \
+            "https://api.github.com/repos/${{ github.repository }}/contents/memory/system_context.json"
