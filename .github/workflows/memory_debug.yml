@@ -1,0 +1,21 @@
+name: Debug Memory
+
+on:
+  workflow_run:
+    workflows: ["Legal OS Pipeline"]
+    types:
+      - completed
+
+jobs:
+  capture:
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3
+
+      - name: Capture failure
+        run: |
+          echo "{\"run_id\": \"${{github.event.workflow_run.id}}\", \"conclusion\": \"failure\", \"timestamp\": \"$(date -Is)\"}" >> memory/debug_log.json
+        
