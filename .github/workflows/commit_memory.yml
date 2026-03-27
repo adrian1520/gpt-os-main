@@ -53,3 +53,7 @@ jobs:
           git pull --rebase origin main
           git merge --no-ff origin/$BRANCH
           git push origin main
+ 
+      - name: Cleanup branch
+        run: |
+          git push origin --delete $BRANCH || echo "branch not deleted"
