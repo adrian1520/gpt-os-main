@@ -1,0 +1,47 @@
+name: Commit Memory Engine
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - 'memory/**'
+
+jobs:
+  memory:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Create run branch
+        run: |
+          BRANCH="run/$(date +%s)"
+          echo "BRANCH=$BRANCH" >> $GITHUB_ENV
+          git checkout -b $BRANCH
+
+      - name: Extract git changes
+        run: |
+          git log -1 --pretty="%x%22%22commit%22%22%3A%22%22Head%22%22,%22%22message%22%22%3A%22%22%s%22%22,%22%22author%22%22%3A%22%22%an%22%22,%22%22date%22%22%3A%22%22%ad%22%22}" > commit.json
+          git diff --name-only HEAD^1 HEAD > files.txt
+
+      - name: Build memory
+        run: |
+          mkdir -p memory
+          NOW=$(date -Is)
+          files=$(cat files.txt | tr '\n" ',')
+          echo "{\"timestamp\": \"$NOW\", \"files\": \"$files\"}" >> memory/history_log.json
+ 
+      - name: Commit memory
+        run: |
+          git add memory/history_log.json
+          git commit -m "memory update [skip ci]" || echo "no changes"
+
+      - name: Merge to main
+        run: |
+          git checkout main
+          git pull origin main
+          git merge --no-ff $BRANCH
+          git push origin main
