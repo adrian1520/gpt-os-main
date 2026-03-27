@@ -36,10 +36,10 @@ jobs:
         run: |
           mkdir -p memory
           NOW=$(date -Is)
-          files=$(cat files.txt | tr '\n" ',')
+          files=$(tr '\n' ',' < files.txt | sed 's/,$//')
           echo "{\"timestamp\": \"$NOW\", \"files\": \"$files\"}" >> memory/history_log.json
           echo "{\"last_update\": \"$NOW\", \"files\": \"$files\"}" > memory/system_context.json
-
+ 
       - name: Commit memory on branch
         run: |
           git add memory/history_log.json memory/system_context.json
