@@ -52,11 +52,11 @@ jobs:
             echo "[]" > memory/debug_log.json
           fi
 
-          json=$(jq --arg id "${{ github.event.workflow_run.id }}" \
+          json=$(jq --arg run "${{ github.event.workflow_run.id }}" \
                         --arg step "$FAILED_STEP" \
                         --arg err "$ERROR" \
                         --arg ts "$NOW" \
-                        '. + [ { run_id: $id, failed_step: $step, error: $err, timestamp: $ts } ]' memory/debug_log.json)
+                        '. + [ { run_id: $run, failed_step: $step, error: $err, timestamp: $ts } ]' memory/debug_log.json)
 
           echo "$json" > memory/debug_log.json
 
