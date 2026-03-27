@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
   pipeline:
@@ -14,58 +15,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v4
+
       - name: Fetch event list
         run: |
-          curl -s -H "Authorization: token ${{github.token}}" \
-            "https://api.github.com/repos/${{github.repository}}/contents/events" > list.json
+          curl -s -H "Authorization: Bearer ${{ github.token }}"             "https://api.github.com/repos/${{ github.repository }}/contents/events" > list.json
 
       - name: Fetch latest event (content)
         run: |
-          python - << 'PY'
-          import json, base64, os,subprocess
-          data = json.load(open("list.json"))
-          if not data:
-              print("NO EVENTS!")
-              exit(1)
-
-          file = data[0]["name"]
-          print("FILE:", file)
-
-          url = f"https://api.github.com/repos/${gathhub.repository}/contents/events/{file}"
-          cmd = [
-            "curl","-s","-H",f"Authorization: token ${{globals()['GITHUB_TOKEN']}}",url
-          ]
-          res = subprocess.check_output(cmd).decode()
-          data2 = json.loads(res)
-
-          content = data2.get("content", "")
-          if content:
-              content = base64.b64decode(content).decode()
-          else:
-              content = ""
-
-          open("event.json","w").write(content)
-          print("EVENT.JSON:")
-          print(content[:200])
-          PY
-
-      - name: Run parser
-        run: python scripts/parser.py event.json parsed.json
+          python scripts/parser.py
 
       - name: Run event engine
-        run: python scripts/event_engine.py parsed.json event_out.json
-
-      - name: Prepare API write
         run: |
-          TMS=$(date +%s)
-          content=$(base64 -w 0 event_out.json || true)
-          echo "CONTENT_LEN=${#content}"
-          echo "CONTENT=$content" >> $GITHUB_ENV
+          python scripts/event_engine.py parsed.json event_out.json
 
-      - name: Upload via API
+      - name: Dispatch memory write
         run: |
-          curl -X PUT -i \
-            -h "Authorization: token ${{ github.token }}" \
-            -h "Content-Type: application/json" \
-            -d "{\n  \"message\": \"pipeline output api\",\n  \"path\": \"cases/test/events/event_$TMS.json\",\n  \"content\": \"${CONTENT}\"\n}" \
-            "https://api.github.com/repos/${{github.repository }}/contents/cases/test/events/event_$TMS.json"
+          curl -X POST             -H "Authorization: Bearer ${{ github.token }}"             -H "Accept: application/vnd.github+json"             https://api.github.com/repos/${{ github.repository }}/dispatches             -d '{
+              "event_type": "write_memory_files",
+              "client_payload": {
+                "run_id": "${{ github.run_id }}"
+              }
+            }'
