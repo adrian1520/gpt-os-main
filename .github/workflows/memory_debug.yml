@@ -1,4 +1,4 @@
-name: Deep Debug Memory V3
+name: Deep Debug Memory V4
 
 on:
   workflow_run:
@@ -26,7 +26,16 @@ jobs:
           failed_step=$(jq -r '.jobs[].steps[] | select(.conclusion=="failure").step }' jobs.json | head -n1 )
           echo "FAILED_STEP=$failed_step" >> $GITHUB_ENV
         
+      - name: Fetch logs
+        run: |
+          RUN_ID=${{ github.event.workflow_run.id }}
+          curl -s -H "Authorization: token ${{github.token}}" \
+            "https://api.github.com/repos/${{github.repository}}/actions/runs/$RUN_ID/logs" -o logs.zip
+          unzip -o logs.zip -d  logs
+          error=$(grep -r "error" logs | head -n 1)
+          echo "ERROR=$error" >> $GITHBO_ENV
+
       - name: Save debug
         run: |
           NOW=$(date -Is)
-          echo "{\"run_id\": \"${{ github.event.workflow_run.id}}\", \"failed_step\": \"${{ env.FAILED_STEP }}\", \"timestamp\": \"$NOW\"}" >> memory/debug_log.json
+          echo "{\"run_id\": \"${{ github.event.workflow_run.id}}\", \"failed_step\": \"${{ env.FAILED_STEP }}\", \"error\": \"${{ env.ERROR }}\", \"timestamp\": \"$NOW\"}" >> memory/debug_log.json
