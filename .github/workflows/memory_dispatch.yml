@@ -1,0 +1,37 @@
+name: Memory Dispatch System
+
+on:
+  repository_dispatch:
+    types: [write_memory_files]
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: memory-write
+  cancel-in-progress: false
+
+jobs:
+  memory:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build debug json
+        run: |
+          now=$(date -Is)
+          printf '{"run_id":"%s","timestamp":"%s"}\n' "${{ github.event.client_payload.run_id }}" "$now" > debug.json
+
+      - name: Encode base64
+        run: |
+          content=$(base64 -w 0 debug.json)
+          echo "CONTENT=$content" >> $GITHUB_ENV
+
+      - name: Write memory
+        uses: ./.github/actions/api_write
+        with:
+          path: memory/debug/run_${{ github.event.client_payload.run_id }}.json
+          content: ${{ env.CONTENT }}
+          message: memory dispatch update
