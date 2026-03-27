@@ -1,0 +1,47 @@
+name: Global Debug Scanner
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - 'memory/**'
+
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Fetch failed runs
+        run: |
+          curl -s -H "Authorization: token ${{ github.token}}" \
+            "https://api.github.com/repos/${{github.repository}}/actions/runs?status=failure&per_page=5" > runs.json
+
+      - name: Build debug log
+        run: |
+          mkdir -p memory
+          NOW=$(date -Is)
+          > memory/debug_log.json
+
+          for run in $(jq -r '.workflow_runs[].id' runs.json); do
+            curl -s -H "Authorization: token ${{github.token}}" \
+              "https://api.github.com/repos/${{github.repository}}/actions/runs/$run/jobs" > jobs.json
+ 
+            failed_step=$(jq -r '.jobs[].steps[] | select(.conclusion=="failure") | .name' jobs.json | head -n1)
+
+            echo "{\"run_id\": \"$run\", \"failed_step\": \"$failed_step\", \"timestamp\": \"$NOW\"}" >> memory/debug_log.json
+          done
+
+      - name: Commit debug
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+
+          git add memory/debug_log.json
+          git commit -m "update global debug [skip ci]" || echo "no changes"
+          git push
