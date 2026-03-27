@@ -16,6 +16,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Config git
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+
       - name: Create run branch
         run: |
           BRANCH="run/$(date +%s)"
@@ -27,28 +32,24 @@ jobs:
           git log -1 --pretty="%s" > commit.txt
           git diff --name-only HEAD^1 HEAD > files.txt
 
-      - name: Build history log
+      - name: Build memory
         run: |
           mkdir -p memory
           NOW=$(date -Is)
-          files=$(cat files.txt | tr '\n' ',')
+          files=$(cat files.txt | tr '\n" ',')
           echo "{\"timestamp\": \"$NOW\", \"files\": \"$files\"}" >> memory/history_log.json
-
-      - name: Build system context
-        run: |
-          mkdir -p memory
-          NOW=$(date -Is)
-          files=$(git ls-files | tr '\n" ',')
           echo "{\"last_update\": \"$NOW\", \"files\": \"$files\"}" > memory/system_context.json
 
-      - name: Commit memory
+      - name: Commit memory on branch
         run: |
           git add memory/history_log.json memory/system_context.json
           git commit -m "memory update [skip ci]" || echo "no changes"
+          git push origin $BRANCH
 
       - name: Merge to main
         run: |
+          git fetch origin main
           git checkout main
-          git pull origin main
-          git merge --no-ff $BRANCH
+          git pull --rebase origin main
+          git merge --no-ff origin/$BRANCH
           git push origin main
