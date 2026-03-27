@@ -21,8 +21,9 @@ jobs:
 
       - name: Write memory
         run: |
-          now=$(date -Is)\
-          echo "{\"timestamp\": \"$now$\"}" >> memory/session_log.json
+          mkdir -p memory
+          now=$(date -Is)
+          echo "{\"timestamp\": \"$now\"}" >> memory/session_log.json
 
       - name: Commit
         run: |
