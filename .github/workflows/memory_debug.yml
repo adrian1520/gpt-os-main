@@ -6,15 +6,15 @@ on:
     types:
       - completed
 
+permissions:
+  contents: write
+
 jobs:
   debug:
     if: ${{ github.event.workflow_run.conclusion == 'failure' }}
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
@@ -23,44 +23,62 @@ jobs:
       - name: Fetch jobs
         run: |
           RUN_ID=${{ github.event.workflow_run.id }}
+          echo "RUN_ID=$RUN_ID"
           curl -s -H "Authorization: token ${{ github.token}}" \
             "https://api.github.com/repos/${{github.repository}}/actions/runs/$RUN_ID/jobs" > jobs.json
+          echo "jobs.json:"
+          cat jobs.json | head -n 500
 
       - name: Parse failure 
         run: |
           python - << 'PY'
-          import json, os
+          import json
           with open("jobs.json") as f:
-            data = json.load(f)
-
+              data = json.load(f)
           failed_step = "no_fail"
           for job in data.get("jobs", []):
               for step in job.get("steps", []):
                   if step.get("conclusion") == "failure":
                       failed_step = step.get("name", "unknown")
-
           open("failed.txt", "w").write(failed_step)
+          print("FAILED_STEP:", failed_step)
           PY
 
       - name: Build JSON
         run: |
+          set -eu
           now=$(date -Is)
-          step=$(cat failed.txt)
+          step=$(cat failed.txt || echo "no_fail")
           run_id=${{ github.event.workflow_run.id }}
           unique=$(date +%s)
           echo "{\"run_id\": \"$run_id\", \"failed_step\": \"$step\", \"timestamp\": \"$now\"}" > debug.json
+          echo "DEBUG.JSON:"
+          cat debug.json
+          echo "SIZE:"
+          wc -c debug.json
 
       - name: Encode base64
         run: |
-          content=$(base64 -w 0 debug.json)
+          content=$(base64 -w 0 debug.json || true)
+          echo "CONTENT_LEN=${#content}"
           echo "CONTENT=$content" >> $GITHUB_ENV
 
       - name: Upload via API
         run: |
+          set -eu
           RUN_ID=${{ github.event.workflow_run.id }}
           UNIQUE=$(date +%s)
-          curl -X PUT -i \
-            -h "Authorization: token ${{ github.token }}" \
+          URL="https://api.github.com/repos/${{ github.repository }}/contents/memory/debug/run_$RUN_ID_$UNIQUE.json"
+          echo "URL: $URL"
+          payload="{
+  \"message\": \"debug run update\",
+  \"path\": \"memory/debug/run_$RUN_ID_$UNIQUE.json\",
+  \"content\": \"${CONTENT}\"
+}"
+          echo "PAYLOAD:"
+          echo "$payload"
+          curl -i -X PUT \
+            -H "Authorization: token ${{github.token}}" \
             -h "Content-Type: application/json" \
-            -d "{\n  \"message\": \"debug run update\",\n  \"path\": \"memory/debug/run_$RUN_ID_$UNIQUE.json\",\n  \"content\": \"${CONTENT}\"\n}" \
-            "https://api.github.com/repos/${{ github.repository }}/contents/memory/debug/run_$RUN_ID_$UNIQUE.json"
+            -d "$payload" \
+            "$URL"
