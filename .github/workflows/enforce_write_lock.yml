@@ -1,0 +1,42 @@
+name: Enforce Write Lock
+
+on:
+  push:
+    branches: [ main ]
+
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install pyraml
+
+      - name: Validate all YAML"
+        run: |
+          echo "Scanning YALL files..."
+          fail=0
+          for f in $(git diff --name-only --relative ${{ github.event.before }} ${{ github.sha }} | grep -E '\.yaml|\.yml'); do
+            echo "Validating $f"
+            python tools/yaml_compile.py < "$f" > /dev/null || fail=1
+          done
+
+          if [ $fail -ne 0 ]; then
+            echo "YAML VALIDATION FAILED"
+            exit 1
+          fi
+
+      - name: Enforce write lock
+        run: |
+          echo "Write lock enforced: all YAML must pass compile pipeline."
