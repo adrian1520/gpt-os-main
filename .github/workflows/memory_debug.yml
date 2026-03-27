@@ -1,4 +1,4 @@
-name: Deep Debug Memory
+name: Deep Debug Memory V2
 
 on:
   workflow_run:
@@ -15,10 +15,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3
 
-      - name: Capture debug data
+      - name: Extract debug info
         run: |
           RUN_ID=${{ github.event.workflow_run.id }}
           STATUS=${{ github.event.workflow_run.conclusion }}
           NOW=$(date -Is)
 
-          echo "{\"run_id\": \"$RUN_ID\", \"status\": \"$STATUS\", \"timestamp\": \"$NOW\", \"note\": \"failure captured\"}" >> memory/debug_log.json
+          echo "{\"run_id\": \"$RUN_ID\", \"status\": \"$STATUS\", \"timestamp\": \"$NOW\", \"failed_step\": \"UNKNOWN\", \"error\": \"NO_LOGS_AVAILABLE\"}" >> memory/debug_log.json
