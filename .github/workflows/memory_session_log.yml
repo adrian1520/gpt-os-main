@@ -2,20 +2,26 @@ name: Dynamic Session Log
 
 on:
   push:
-    paths:
-      - 'events/**'
+    branches: [ main ]
+    paths-ignore:
+      - 'memory/**'
 
 jobs:
   update:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v3
 
+      - name: Detect changes
+        run: |
+          files=$(git diff --name-only HEAD~1 HEAD)
+          echo "FILES=$files" >> $GITHUB_ENV
+
       - name: Append session
         run: |
-          now$=$(date -Is)\
-          file=$(ls events/ | head -n 1)\
-          echo "{\"timestamp\": \"$now$\", \"event\": \"$file\"}" >> memory/session_log.json
+          now=$(date -Is)
+          echo "{\"timestamp\": \"$now$\", \"files\": \"${{ env.FILES }}\"}" >> memory/session_log.json
 
       - name: Commit
         run: |
