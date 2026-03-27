@@ -1,4 +1,4 @@
-name: Deep Debug Memory V2
+name: Deep Debug Memory V3
 
 on:
   workflow_run:
@@ -15,10 +15,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3
 
-      - name: Extract debug info
+      - name: Fetch jobs
         run: |
           RUN_ID=${{ github.event.workflow_run.id }}
-          STATUS=${{ github.event.workflow_run.conclusion }}
-          NOW=$(date -Is)
+          curl -s -H "Authorization: token ${{github.token}}" \
+            "https://api.github.com/repos/${{github.repository}}/actions/runs/$RUN_ID/jobs" > jobs.json
 
-          echo "{\"run_id\": \"$RUN_ID\", \"status\": \"$STATUS\", \"timestamp\": \"$NOW\", \"failed_step\": \"UNKNOWN\", \"error\": \"NO_LOGS_AVAILABLE\"}" >> memory/debug_log.json
+      - name: Extract failed step
+        run: |
+          failed_step=$(jq -r '.jobs[].steps[] | select(.conclusion=="failure").step }' jobs.json | head -n1 )
+          echo "FAILED_STEP=$failed_step" >> $GITHUB_ENV
+        
+      - name: Save debug
+        run: |
+          NOW=$(date -Is)
+          echo "{\"run_id\": \"${{ github.event.workflow_run.id}}\", \"failed_step\": \"${{ env.FAILED_STEP }}\", \"timestamp\": \"$NOW\"}" >> memory/debug_log.json
