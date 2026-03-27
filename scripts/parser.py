@@ -32,7 +32,7 @@ def extract_entities(text):
         wl = w.lower()
         if "sád" in wl or "urzę" in wl or "spółka" in wl:
             orgs.append(w)
-        if "warl." in wl or "§" in wl:
+        if "art." in wl or "§" in wl:
             legal.append(w)
 
     return {
@@ -59,7 +59,8 @@ def parse_document(path):
     with open(path) as f:
         doc = json.load(f)
 
-    text = doc["content"]["rext"] if "text" not in doc["content"] else doc["content"]["rext"]
+    text = doc["content"]["text"]
+
     sentences = extract_sentences(text)
     entities = extract_entities(text)
 
