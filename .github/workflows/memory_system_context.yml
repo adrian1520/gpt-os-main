@@ -2,20 +2,22 @@ name: Dynamic System Context
 
 on:
   push:
-    paths:
-      - 'events/**'
+    branches: [ main ]
+    paths-ignore:
+      - 'memory/**'
 
 jobs:
   update:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
 
       - name: Update context
         run: |
           now$=$(date -Is)\
-          file=$(ls events/ | head -n 1)\
-          echo "{\"last_event\": \"$file\", \"updated_at\": \"$now\"}" > memory/system_context.json
+          echo "{\"updated_at\": \"$now\"}" > memory/system_context.json
       - name: Commit
         run: |
           git config --global user.name "github-actions"
