@@ -1,0 +1,40 @@
+name: Legal OS Pipeline
+
+on:
+  push:
+    paths:
+      - 'events/**'
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3
+
+      - name: Load event
+        run: |
+          file=$(ls events/ | head -n 1)
+          cat "events/$file" > event.json
+
+      - name: Ingestion
+        run: echo "Ingestion step"
+
+      - name: Parsing
+        run: echo "Parsing step"
+
+      - name: Normalization
+        run: echo "Normalization step"
+
+      - name: Event Generation
+        run: echo "Event generation step"
+
+      - name: Entity Extraction
+        run: echo "Entity extraction step"
+
+      - name: Graph Build
+        run: echo "Graph build step"
+
+      - name: State Update
+        run: echo "State update step"
