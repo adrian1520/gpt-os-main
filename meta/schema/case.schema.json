@@ -1,0 +1,10 @@
+{
+  "type": "object",
+  "properties": {
+    "case_id": {"type": "string"},
+    "type": {"type": "string"},
+    "jurisdiction": {"type": "string"},
+    "created_at": {"type": "string"},
+    "tags": {"type": "array"}
+  }
+}
