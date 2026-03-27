@@ -1,9 +1,12 @@
-name: Legal OS Pipeline
+name: Legal OS Pipeline API-DRIVEN
 
 on:
   push:
     paths:
       - 'events/**'
+
+permissions:
+  contents: write
 
 jobs:
   pipeline:
@@ -11,13 +14,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Load event
+      - name: Fetch latest event (API)
         run: |
-          file=$(ls events/ | head -n 1)
-          cat "events/$file" > event.json
+          curl -s -H "Authorization: token ${{ github.token}}" \
+            "https://api.github.com/repos/${{github.repository}}/contents/events" > events.json
+          python - << 'PY'
+          import json, base64
+          data = json.load(open("events.json"))
+          file = data[0]["name"]
+          print("FILE:", file)
+          content_raw = data[0]["content"] if "content" in data[0] else None
+          open("event.json", "w").write(content_raw or "")
+          PY
 
       - name: Run parser
         run: python scripts/parser.py event.json parsed.json
@@ -27,15 +35,15 @@ jobs:
 
       - name: Prepare API write
         run: |
-          TMS=$(date +\s%)
-          content=$(base64 -w 0 event_out.json)
-          echo "TMS=$TMS" >> $GITHUB_ENV
+          TMS=$(date +%s)
+          content=$(base64 -w 0 event_out.json || true)
+          echo "CONTENT_LEN=${{content}}"
           echo "CONTENT=$content" >> $GITHUB_ENV
 
       - name: Upload via API
         run: |
-          curl -X PUT -s \
-            -H "Authorization: token ${{github.token}}" \
+          curl -X PUT -i \
+            -h "Authorization: token ${{ github.token }}" \
             -h "Content-Type: application/json" \
             -d "{\n  \"message\": \"pipeline output api\",\n  \"path\": \"cases/test/events/event_$TMS.json\",\n  \"content\": \"${CONTENT}\"\n}" \
             "https://api.github.com/repos/${{github.repository }}/contents/cases/test/events/event_$TMS.json"
