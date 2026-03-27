@@ -18,11 +18,14 @@ jobs:
           file=$(ls events/ | head -n 1)
           cat "events/$file" > event.json
 
-      - name: Ingestion
-        run: echo "Ingestion step"
+      - name: Run parser
+        run: |
+          python scripts/parser.py event.json parsed.json
 
-      - name: Parsing
-        run: echo "Parsing step"
+      - name: Save parsed
+        run: |
+          mkdir -p cases/test/documents/parsed
+          mv parsed.json cases/test/documents/parsed/parsed_$(date +%s).json
 
       - name: Normalization
         run: echo "Normalization step"
