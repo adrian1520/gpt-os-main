@@ -14,17 +14,39 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Fetch latest event (API)
+      - name: Fetch event list
         run: |
-          curl -s -H "Authorization: token ${{ github.token}}" \
-            "https://api.github.com/repos/${{github.repository}}/contents/events" > events.json
+          curl -s -H "Authorization: token ${{github.token}}" \
+            "https://api.github.com/repos/${{github.repository}}/contents/events" > list.json
+
+      - name: Fetch latest event (content)
+        run: |
           python - << 'PY'
-          import json, base64
-          data = json.load(open("events.json"))
+          import json, base64, os,subprocess
+          data = json.load(open("list.json"))
+          if not data:
+              print("NO EVENTS!")
+              exit(1)
+
           file = data[0]["name"]
           print("FILE:", file)
-          content_raw = data[0]["content"] if "content" in data[0] else None
-          open("event.json", "w").write(content_raw or "")
+
+          url = f"https://api.github.com/repos/${gathhub.repository}/contents/events/{file}"
+          cmd = [
+            "curl","-s","-H",f"Authorization: token ${{globals()['GITHUB_TOKEN']}}",url
+          ]
+          res = subprocess.check_output(cmd).decode()
+          data2 = json.loads(res)
+
+          content = data2.get("content", "")
+          if content:
+              content = base64.b64decode(content).decode()
+          else:
+              content = ""
+
+          open("event.json","w").write(content)
+          print("EVENT.JSON:")
+          print(content[:200])
           PY
 
       - name: Run parser
@@ -37,7 +59,7 @@ jobs:
         run: |
           TMS=$(date +%s)
           content=$(base64 -w 0 event_out.json || true)
-          echo "CONTENT_LEN=${{content}}"
+          echo "CONTENT_LEN=${#content}"
           echo "CONTENT=$content" >> $GITHUB_ENV
 
       - name: Upload via API
