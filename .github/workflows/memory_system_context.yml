@@ -1,0 +1,13 @@
+name: Update System Context
+
+on:
+  push:
+    paths:
+      - 'events/**'
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: echo "{}" > memory/system_context.json
