@@ -1,0 +1,65 @@
+name: Memory Aggregator
+
+on:
+  repository_dispatch:
+    types: [write_memory_files]
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: memory-write
+  cancel-in-progress: false
+
+jobs:
+  aggregate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build debug json
+        run: |
+          now=$(date -Is)
+          printf '{"run_id":"%s","timestamp":"%s","type":"debug"}\n' "${{ github.event.client_payload.run_id }}" "$now" > debug.json
+
+      - name: Build session json
+        run: |
+          now=$(date -Is)
+          printf '{"type":"session","timestamp":"%s"}\n' "$now" > session.json
+
+      - name: Build SOT (mini )
+        run: |
+          now=$(date -Is)
+          printf '{"type":"sot","timestamp":"%s"}\n' "$now" > sot.json
+
+      - name: Encode all
+        run: |
+          DEBUG=$(base64 -w 0 debug.json)
+          SESSION=$(base64 -w 0 session.json)
+          SOT=$(base64 -w 0 sot.json)
+          echo "DEBUG=$DEBUG" >> $GITHUB_ENV
+          echo "SESSION=$SESSION" >> $GITHUB_ENV
+          echo "SOT=$SOT" >> $GITHUB_ENV
+
+      - name: Write debug
+        uses: ./.github/actions/api_write
+        with:
+          path: memory/debug/run_${{ github.event.client_payload.run_id }}.json
+          content: ${{ env.DEBUG }}
+          message: debug aggregator
+
+      - name: Write session
+        uses: ./.github/actions/api_write
+        with:
+          path: memory/session/session_${{ github.event.client_payload.run_id }}.json
+          content: ${{ env.SESSION }}
+          message: session aggregator
+
+      - name: Write SOT
+        uses: ./.github/actions/api_write
+        with:
+          path: memory/source_of_truth.json
+          content: ${{ env.SOT }}
+          message: sot aggregator
