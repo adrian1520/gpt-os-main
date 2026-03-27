@@ -8,7 +8,9 @@ on:
 
 jobs:
   debug:
-    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    if: >
+      github.actor != 'github-actions' &&
+      github.event.workflow_run.conclusion == 'failure'
     runs-on: ubuntu-latest
 
     steps:
@@ -28,13 +30,13 @@ jobs:
         run: |
           failed_step=$(jq -r '.jobs[].steps[] | select(.conclusion=="failure") | .name' jobs.json | head -n1 )
           echo "FAILED_STEP=$failed_step" >> $GITHUB_ENV
-        
+
       - name: Fetch logs
         run: |
           RUN_ID=${{ github.event.workflow_run.id }}
           curl -s -H "Authorization: token ${{github.token}}" \
             "https://api.github.com/repos/${{github.repository}}/actions/runs/$RUN_ID/logs" -o logs.zip
-          unzip -o logs.zip -d logs
+          unzip -o logs.zip -d logs || true
           error=$(grep -r "error" logs | head -n 1 || echo "no_error_found")
           echo "ERROR=$error" >> $GITHUB_ENV
 
@@ -42,12 +44,12 @@ jobs:
         run: |
           mkdir -p memory
           NOW=$(date -Is)
-          echo "{\"run_id\": \"${{ github.event.workflow_run.id}}\", \"failed_step\": \"${{ env.FAILED_STEP }}\", \"error\": \"${{ env.ERROR }}\", \"timestamp\": \"$NOW\"}" >> memory/debug_log.json
+          echo "{\"run_id\": \"${{ github.event.workflow_run.id }}\", \"failed_step\": \"${{ env.FAILED_STEP }}\", \"error\": \"${{ env.ERROR }}\", \"timestamp\": \"$NOW\"}" >> memory/debug_log.json
 
       - name: Commit
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
           git add memory/debug_log.json
-          git commit -m "update debug log" || echo "no changes"
+          git commit -m "update debug log [skip ci]" || echo "no changes"
           git push
