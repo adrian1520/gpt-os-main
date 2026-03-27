@@ -47,17 +47,14 @@ jobs:
             echo "[]" > memory/debug_log.json
           fi
 
-          if ! jq empty memory/debug_log.json > /dev/null 2>&1; then
-            echo "[]" > memory/debug_log.json
-          fi
-
-          if jq -e 'type=="object"' memory/debug_log.json > /dev/null 2>&1; then
+          if ! jq empty memory/debug_log.json > /dev/null 2>&1 || \
+              ! jq -e 'type=="array"' memory/debug_log.json > /dev/null 2>&1; then
             echo "[]" > memory/debug_log.json
           fi
 
           json=$(jq --arg id "${{ github.event.workflow_run.id }}" \
                         --arg step "$FAILED_STEP" \
-                         --arg err "$ERROR" \
+                        --arg err "$ERROR" \
                         --arg ts "$NOW" \
                         '. + [ { run_id: $id, failed_step: $step, error: $err, timestamp: $ts } ]' memory/debug_log.json)
 
