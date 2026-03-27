@@ -25,15 +25,17 @@ jobs:
       - name: Run event engine
         run: python scripts/event_engine.py parsed.json event_out.json
 
-      - name: Save results
+      - name: Prepare API write
         run: |
-          mkdir -p cases/test/events
-          mv event_out.json cases/test/events/event_$(date +%s).json
+          TMS=$(date +\s%)
+          content=$(base64 -w 0 event_out.json)
+          echo "TMS=$TMS" >> $GITHUB_ENV
+          echo "CONTENT=$content" >> $GITHUB_ENV
 
-      - name: Commit
+      - name: Upload via API
         run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "actions@github.com"
-          git add cases
-          git commit -m "pipeline output [skip ci]" || echo "no changes"
-          git push
+          curl -X PUT -s \
+            -H "Authorization: token ${{github.token}}" \
+            -h "Content-Type: application/json" \
+            -d "{\n  \"message\": \"pipeline output api\",\n  \"path\": \"cases/test/events/event_$TMS.json\",\n  \"content\": \"${CONTENT}\"\n}" \
+            "https://api.github.com/repos/${{github.repository }}/contents/cases/test/events/event_$TMS.json"
