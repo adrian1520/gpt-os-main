@@ -1,0 +1,64 @@
+name: Source Of Truth Builder
+
+on:
+  push:
+    branches: [ main ]
+  workflow_run:
+    types:
+      - completed
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Fetch repo tree (API)
+        run: |
+          curl -s -H "Authorization: token ${{ github.token}}" \
+            "https://api.github.com/repos/${{github.repository}}/git/trees/main?recursive=1" > tree.json
+
+      - name: Build SOT (API + Python)
+        run: |
+          python - << 'PY'
+          import json, datetime
+
+          with open("tree.json") as f:
+            data = json.load(f)
+
+          files = [item["path"] for item in data.get("tree", [])]
+
+          debug_runs = [f for f in files if f.startswith("memory/debug/")]
+          sessions = [f for f in files if f.startswith("memory/session/")]
+
+          now = datetime.datetime.utcnow().isoformat() + "Z"
+
+          sot = {
+            "last_update": now,
+            "repo_state": {
+              "files_count": len(files),
+              "debug_runs": len(debug_runs),
+              "sessions": len(sessions)
+            },
+            "debug_files": debug_runs[:10],
+            "session_files": sessions[:10]
+          }
+
+          open("sot.json", "w").write(json.dumps(sot, indent=2))
+          PY
+
+      - name: Encode base64
+        run: |
+          content=$(base64 -w 0 sot.json)
+          echo "CONTENT=$content" >> $GITHUB_ENV
+
+      - name: Upload via API
+        run: |
+          curl -X PUT -s \
+            -h "Authorization: token ${{ github.token }}" \
+            -h "Content-Type: application/json" \
+            -d "{\n  \"message\": \"source of truth update\",\n  \"path\": \"memory/source_of_truth.json\",\n  \"content\": \"${CONTENT}\"\n}" \
+            "https://api.github.com/repos/${{github.repository }}/contents/memory/source_of_truth.json"
