@@ -46,7 +46,8 @@ jobs:
         run: |
           now=$(date -Is)
           step=$(cat failed.txt)
-          echo "{\"run_id\": \"${{ github.event.workflow_run.id }}\", \"failed_step\": \"$step\", \"timestamp\": \"$now\"}" > debug.json
+          run_id=${{ github.event.workflow_run.id }}
+          echo "{\"run_id\": \"$run_id\", \"failed_step\": \"$step\", \"timestamp\": \"$now\"}" > debug.json
 
       - name: Encode base64
         run: |
@@ -55,8 +56,9 @@ jobs:
 
       - name: Upload via API
         run: |
+          RUN_ID=${{ github.event.workflow_run.id }}
           curl -X PUT -s \
             -H "Authorization: token ${{github.token}}" \
             -h "Content-Type: application/json" \
-            -d "{\n  \"message\": \"debug log api update\",\n  \"path\": \"memory/debug_log.json\",\n  \"content\": \"${CONTENT}\"\n}" \
-            "https://api.github.com/repos/${{ github.repository }}/contents/memory/debug_log.json"
+            -d "{\n  \"message\": \"debug run update\",\n  \"path\": \"memory/debug/run_$RUN_ID.json\",\n  \"content\": \"${CONTENT}\"\n}" \
+            "https://api.github.com/repos/${{ github.repository }}/contents/memory/debug/run_$RUN_ID.json"
