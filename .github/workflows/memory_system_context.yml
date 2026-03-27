@@ -16,3 +16,10 @@ jobs:
           now$=$(date -Is)\
           file=$(ls events/ | head -n 1)\
           echo "{\"last_event\": \"$file\", \"updated_at\": \"$now\"}" > memory/system_context.json
+      - name: Commit
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+          git add memory/system_context.json
+          git commit -m "update system context" || echo "no changes"
+          git push
