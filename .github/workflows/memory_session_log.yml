@@ -1,4 +1,4 @@
-name: Dynamic Session Log
+name: Memory Session Log
 
 on:
   push:
@@ -11,32 +11,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
         with:
           fetch-depth: 2
 
-      - name: Detect changes
-        run: |
-          if git rev-parse HEAD^1 >/dev/null 2>&1; then
-            git diff --name-status HEAD~1 HEAD -> changes.txt
-          else
-            git ls-files > changes.txt
-          fi
-          files=$(cat changes.txt | awk '{print $2}')
-          echo "FILES=$files" >> $GITHUB_ENV
+      - name: List files
+        run: ls -la
 
-      - name: Classify change
+      - name: Write memory
         run: |
-          type="unknown"
-          if echo "${env.FILES }" | grep -q "scripts/"; then type="code_change"; fi
-          if echo "${env.FILES }" | grep -q "cases/"; then type="data_change"; fi
-          if echo "${env.FILES }" | grep -q ".github/"; then type="config_change"; fi
-          echo "TYPE=$type" >> $GITHUB_ENV
-
-      - name: Append session
-        run: |
-          now$=$(date -Is)\
-          echo "{\"timestamp\": \"$now$\", \"type\": \"${{ env.TYPE }}\", \"files\": \"${{ env.FILES }}\"}" >> memory/session_log.json
+          now=$(date -Is)\
+          echo "{\"timestamp\": \"$now$\"}" >> memory/session_log.json
 
       - name: Commit
         run: |
