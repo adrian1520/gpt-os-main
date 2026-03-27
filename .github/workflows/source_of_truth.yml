@@ -1,4 +1,4 @@
-name: Source Of Truth Builder
+name: Source Of Truth Builder API-DRIVEN
 
 on:
   push:
@@ -7,21 +7,17 @@ on:
     types:
       - completed
 
-
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
       - name: Fetch repo tree (API)
         run: |
           curl -s -H "Authorization: token ${{ github.token}}" \
             "https://api.github.com/repos/${{github.repository}}/git/trees/main?recursive=1" > tree.json
 
-      - name: Build SOT (API + Python)
+      - name: Build SOT (Python)
         run: |
           python - << 'PY'
           import json, datetime
@@ -34,10 +30,8 @@ jobs:
           debug_runs = [f for f in files if f.startswith("memory/debug/")]
           sessions = [f for f in files if f.startswith("memory/session/")]
 
-          # last error (prosta- najnowszy file)
           last_error = debug_runs[-1] if debug_runs else None
 
-          # current focus (prosta heurystyka)
           if debug_runs:
             current_focus = "debug"
           elif sessions:
@@ -60,7 +54,7 @@ jobs:
             "current_focus": current_focus
           }
 
-          open("sot.json", "w").write(json.dumps(sot, indent=2))
+          open("sot.json", "w").write(json.dumps(sot))
           PY
 
       - name: Encode base64
@@ -71,7 +65,7 @@ jobs:
       - name: Upload via API
         run: |
           curl -X PUT -s \
-            -H "Authorization: token ${{github.token}}" \
+            -h "Authorization: token ${{ github.token }}" \
             -h "Content-Type: application/json" \
-            -d "{\n  \"message\": \"source of truth update\",\n  \"path\": \"memory/source_of_truth.json\",\n  \"content\": \"${CONTENT}\"\n}" \
-            "https://api.github.com/repos/${{github.repository }}/contents/memory/source_of_truth.json"
+            -d "{\n  \"message\": \"sot api update\",\n  \"path\": \"memory/source_of_truth.json\",\n  \"content\": \"${CONTENT}\"\n}" \
+            "https://api.github.com/repos/${{ github.repository }}/contents/memory/source_of_truth.json"
