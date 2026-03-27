@@ -12,10 +12,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
 
       - name: Detect changes
         run: |
-          git diff --name-status HEAD~1 HEAD > changes.txt
+          if git rev-parse HEAD^1 >/dev/null 2>&1; then
+            git diff --name-status HEAD~1 HEAD -> changes.txt
+          else
+            git ls-files > changes.txt
+          fi
           files=$(cat changes.txt | awk '{print $2}')
           echo "FILES=$files" >> $GITHUB_ENV
 
@@ -27,21 +33,11 @@ jobs:
           if echo "${env.FILES }" | grep -q ".github/"; then type="config_change"; fi
           echo "TYPE=$type" >> $GITHUB_ENV
 
-      - name: Detect actions
-        run: |
-          added=$(grep '^A' changes.txt | awk '{print $2}')
-          modified=$(grep '^M' changes.txt | awk '{print $2}')
-          deleted=$(grep '^D' changes.txt | awk '{print $2}')
-
-          echo "ADDDED=$added" >> $GITHBO_ENV
-          echo "MODIFIED=$modified" >> $GITHBO_ENV
-          echo "DELETED=$deleted" >> $GITHUB_ENV
-
       - name: Append session
         run: |
-          now=$(date -Is)
-          echo "{\"timestamp\": \"$now$\", \"type\": \"${{ env.TYPE }}\", \"files\": \"${{ env.FILES }}\", \"added\": \"${{ env.ADDED }}\", \"modified\": \"${{ env.MODIFIED }}\", \"deleted\": \"${{ env.DELETED }}\"}" >> memory/session_log.json
- 
+          now$=$(date -Is)\
+          echo "{\"timestamp\": \"$now$\", \"type\": \"${{ env.TYPE }}\", \"files\": \"${{ env.FILES }}\"}" >> memory/session_log.json
+
       - name: Commit
         run: |
           git config --global user.name "github-actions"
