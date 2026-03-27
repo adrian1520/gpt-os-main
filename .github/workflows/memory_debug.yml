@@ -1,27 +1,23 @@
-name: Deep Debug Memory API-ONLY FINAL
+name: Debug Memory API-ONLY FIXED
 
 on:
-  workflow_run:
-    workflows: ["Legal OS Pipeline API-DRIVEN"]
-    types:
-      - completed
+  push:
+    branches: [ main ]
 
 permissions:
   contents: write
 
 jobs:
   debug:
-    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
     runs-on: ubuntu-latest
 
     steps:
       - name: Build debug json
         run: |
           now=$(date -Is)
-          run_id=${{ github.event.workflow_run.id }}
-          echo "{"run_id":"$run_id","timestamp":"$now"}" > debug.json
+          echo "{"run_id":"${{ github.run_id }}","timestamp":"$now"}" > debug.json
 
-      - name: Prepare content (base64)
+      - name: Encode base64
         run: |
           content=$(base64 -w 0 debug.json)
           echo "CONTENT=$content" >> $GITHUB_ENV
@@ -29,6 +25,6 @@ jobs:
       - name: Write via API action
         uses: ./.github/actions/api_write
         with:
-          path: memory/debug/run_${{ github.event.workflow_run.id }}_${{ github.run_id }}.json
+          path: memory/debug/run_${{ github.run_id }}.json
           content: ${{ env.CONTENT }}
           message: debug update
