@@ -1,4 +1,4 @@
-name: Memory Session Log API-ONLY
+name: Memory Session API-ONLY
 
 on:
   push:
@@ -13,7 +13,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-  
+
       - name: Build JSON
         run: |
           now=$(date -Is)
@@ -26,8 +26,9 @@ jobs:
 
       - name: Upload via API
         run: |
+          TMS=$(date +\s%)
           curl -X PUT -s \
             -H "Authorization: token ${{github.token}}" \
             -h "Content-Type: application/json" \
-            -d "{\n  \"message\": \"session log api update\",\n  \"path\": \"memory/session_log.json\",\n  \"content\": \"${CONTENT}\"\n}" \
-            "https://api.github.com/repos/${{ github.repository }}/contents/memory/session_log.json"
+            -d "{\n  \"message\": \"session event\",\n  \"path\": \"memory/session/session_$TMS.json\",\n  \"content\": \"${CONTENT}\"\n}" \
+            "https://api.github.com/repos/${{ github.repository }}/contents/memory/session/session_$TMS.json"
