@@ -1,11 +1,15 @@
 name: Source Of Truth Builder API-DRIVEN
 
 on:
-  push:
-    branches: [ main ]
   workflow_run:
+    workflows:
+      - "Legal OS Pipeline API-DRIVEN"
+      - "Memory Session API-ONLY"
     types:
       - completed
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -14,7 +18,7 @@ jobs:
     steps:
       - name: Fetch repo tree (API)
         run: |
-          curl -s -H "Authorization: token ${{ github.token}}" \
+          curl -s -H "Authorization: token ${{github.token}}" \
             "https://api.github.com/repos/${{github.repository}}/git/trees/main?recursive=1" > tree.json
 
       - name: Build SOT (Python)
@@ -23,7 +27,7 @@ jobs:
           import json, datetime
 
           with open("tree.json") as f:
-            data = json.load(f)
+              data = json.load(f)
 
           files = [item["path"] for item in data.get("tree", [])]
 
@@ -33,25 +37,25 @@ jobs:
           last_error = debug_runs[-1] if debug_runs else None
 
           if debug_runs:
-            current_focus = "debug"
+              current_focus = "debug"
           elif sessions:
-            current_focus = "continue"
+              current_focus = "continue"
           else:
-            current_focus = "init"
+              current_focus = "init"
 
           now = datetime.datetime.utcnow().isoformat() + "Z"
 
           sot = {
-            "last_update": now,
-            "repo_state": {
-              "files_count": len(files),
-              "debug_runs": len(debug_runs),
-              "sessions": len(sessions)
-            },
-            "debug_files": debug_runs[:10],
-            "session_files": sessions[:10],
-            "last_error": last_error,
-            "current_focus": current_focus
+              "last_update": now,
+              "repo_state": {
+                  "files_count": len(files),
+                  "debug_runs": len(debug_runs),
+                  "sessions": len(sessions)
+              },
+              "debug_files": debug_runs[:10],
+              "session_files": sessions[:10],
+              "last_error": last_error,
+              "current_focus": current_focus
           }
 
           open("sot.json", "w").write(json.dumps(sot))
@@ -62,10 +66,9 @@ jobs:
           content=$(base64 -w 0 sot.json)
           echo "CONTENT=$content" >> $GITHUB_ENV
 
-      - name: Upload via API
-        run: |
-          curl -X PUT -s \
-            -h "Authorization: token ${{ github.token }}" \
-            -h "Content-Type: application/json" \
-            -d "{\n  \"message\": \"sot api update\",\n  \"path\": \"memory/source_of_truth.json\",\n  \"content\": \"${CONTENT}\"\n}" \
-            "https://api.github.com/repos/${{ github.repository }}/contents/memory/source_of_truth.json"
+      - name: Write via API action
+        uses: ./.github/actions/api_write
+        with:
+          path: memory/source_of_truth.json
+          content: ${{ env.CONTENT }}
+          message: sot update
