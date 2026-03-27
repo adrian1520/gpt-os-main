@@ -8,7 +8,6 @@ on:
 
 jobs:
   update:
-    if: github.actor != 'github-actions'
     runs-on: ubuntu-latest
 
     steps:
@@ -20,9 +19,9 @@ jobs:
       - name: Write memory
         run: |
           mkdir -p memory
-          now=$(date -Is)\
+          now=$(date -Is)
           echo "{\"timestamp\": \"$now\"}" >> memory/session_log.json
- 
+  
       - name: Commit
         run: |
           git config --global user.name "github-actions"
