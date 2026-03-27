@@ -22,22 +22,24 @@ jobs:
         run: |
           python scripts/parser.py event.json parsed.json
 
+      - name: Run event engine
+        run: |
+          python scripts/event_engine.py parsed.json event_out.json
+
+      - name: Save event
+        run: |
+          mkdir -p cases/test/events
+          mv event_out.json cases/test/events/event_$(date +%s).json
+
       - name: Save parsed
         run: |
           mkdir -p cases/test/documents/parsed
           mv parsed.json cases/test/documents/parsed/parsed_$(date +%s).json
-
-      - name: Normalization
-        run: echo "Normalization step"
-
-      - name: Event Generation
-        run: echo "Event generation step"
-
-      - name: Entity Extraction
-        run: echo "Entity extraction step"
-
-      - name: Graph Build
-        run: echo "Graph build step"
-
-      - name: State Update
-        run: echo "State update step"
+      
+      - name: Commit
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+          git add cases/
+          git commit -m "pipeline output" || echo "no changes"
+          git push
