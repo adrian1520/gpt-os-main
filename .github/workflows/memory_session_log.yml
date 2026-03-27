@@ -1,4 +1,4 @@
-name: Update Session Log
+name: Dynamic Session Log
 
 on:
   push:
@@ -10,4 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - run: echo "{\"sessions\": []}" > memory/session_log.json
+
+      - name: Append session
+        run: |
+          now$=$(date -Is)\
+          file=$(ls events/ | head -n 1)\
+          echo "{\"timestamp\": \"$now$\", \"event\": \"$file\"}" >> memory/session_log.json
