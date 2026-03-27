@@ -1,0 +1,13 @@
+name: Update Session Log
+
+on:
+  push:
+    paths:
+      - 'events/**'
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: echo "{\"sessions\": []}" > memory/session_log.json
