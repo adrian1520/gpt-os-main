@@ -24,19 +24,26 @@ jobs:
 
       - name: Extract git changes
         run: |
-          git log -1 --pretty="%x%22%22commit%22%22%3A%22%22Head%22%22,%22%22message%22%22%3A%22%22%s%22%22,%22%22author%22%22%3A%22%22%an%22%22,%22%22date%22%22%3A%22%22%ad%22%22}" > commit.json
+          git log -1 --pretty="%s" > commit.txt
           git diff --name-only HEAD^1 HEAD > files.txt
 
-      - name: Build memory
+      - name: Build history log
         run: |
           mkdir -p memory
           NOW=$(date -Is)
-          files=$(cat files.txt | tr '\n" ',')
+          files=$(cat files.txt | tr '\n' ',')
           echo "{\"timestamp\": \"$NOW\", \"files\": \"$files\"}" >> memory/history_log.json
- 
+
+      - name: Build system context
+        run: |
+          mkdir -p memory
+          NOW=$(date -Is)
+          files=$(git ls-files | tr '\n" ',')
+          echo "{\"last_update\": \"$NOW\", \"files\": \"$files\"}" > memory/system_context.json
+
       - name: Commit memory
         run: |
-          git add memory/history_log.json
+          git add memory/history_log.json memory/system_context.json
           git commit -m "memory update [skip ci]" || echo "no changes"
 
       - name: Merge to main
