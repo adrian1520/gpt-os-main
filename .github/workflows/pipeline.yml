@@ -2,8 +2,6 @@ name: Legal OS Pipeline API-DRIVEN
 
 on:
   push:
-    paths:
-      - 'events/**'
 
 permissions:
   contents: write
