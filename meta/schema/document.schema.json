@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["document_id","case_id","source","created_at","content"],
+  "properties": {
+    "document_id": {"type": "string"},
+    "case_id": {"type": "string"},
+    "source": {"type": "string"},
+    "type_hint": {"type": "string"},
+    "created_at": {"type": "string"},
+    "content": {
+      "type": "object",
+      "required": ["text"],
+      "properties": {
+        "text": {"type": "string"}
+      }
+    }
+  }
+}
