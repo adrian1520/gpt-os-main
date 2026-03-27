@@ -1,4 +1,4 @@
-name: Update System Context
+name: Dynamic System Context
 
 on:
   push:
@@ -10,4 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - run: echo "{}" > memory/system_context.json
+
+      - name: Update context
+        run: |
+          now$=$(date -Is)\
+          file=$(ls events/ | head -n 1)\
+          echo "{\"last_event\": \"$file\", \"updated_at\": \"$now\"}" > memory/system_context.json
