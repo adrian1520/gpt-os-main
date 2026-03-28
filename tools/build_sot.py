@@ -1,4 +1,5 @@
-import json, datetime, os
+import json, os
+from datetime import datetime, UTC
 
 def safe_load(path):
     try:
@@ -7,7 +8,6 @@ def safe_load(path):
     except Exception:
         return None
 
-# Load repo tree
 try:
     with open("tree.json") as f:
         data = json.load(f)
@@ -20,7 +20,6 @@ files = [
     if isinstance(item, dict) and "path" in item
 ]
 
-# Detect memory files
 debug_runs = sorted(
     [f for f in files if f and f.startswith("memory/debug/")]
 )
@@ -29,10 +28,8 @@ sessions = sorted(
     [f for f in files if f and f.startswith("memory/session/")]
 )
 
-# Last error
 last_error = debug_runs[-1] if debug_runs else None
 
-# Load last 10 errors
 def load_errors(debug_files):
     errors = []
     for path in reversed(debug_files[-10:]):
@@ -47,13 +44,11 @@ def load_errors(debug_files):
 
 error_list = load_errors(debug_runs)
 
-# Load live session
 session_current = safe_load("memory/session/current.json")
 
 def resolve_focus(session, debug_runs, sessions):
     if session and isinstance(session, dict):
         status = session.get("status")
-
         if status == "failed":
             return "debug"
         elif status == "success":
@@ -62,7 +57,6 @@ def resolve_focus(session, debug_runs, sessions):
             return "running"
         else:
             return "unknown"
-
     if debug_runs:
         return "debug"
     if sessions:
@@ -71,7 +65,7 @@ def resolve_focus(session, debug_runs, sessions):
 
 current_focus = resolve_focus(session_current, debug_runs, sessions)
 
-now = datetime.datetime.utcnow().isoformat() + "Z"
+now = datetime.now(UTC).isoformat()
 
 sot = {
     "last_update": now,
