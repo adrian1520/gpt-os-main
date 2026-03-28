@@ -1,0 +1,8 @@
+{
+  "run_id": "23682610765",
+  "workflow": "GPT-OS Core Pipeline",
+  "job": "pipeline",
+  "status": "failed",
+  "timestamp": "20260328T094725",
+  "error_snippet": "no logs"
+}
