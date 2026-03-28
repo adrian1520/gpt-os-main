@@ -28,10 +28,13 @@ jobs:
           content: ${{ env.CONTENT }}
           message: update SOT
 
-      - name: Capture failure debug
+      - name: Capture failure debug (extended)
         if: failure()
         run: |
           ts=$(date -u +"%Y%m%dT%H%M%S")
+
+          echo "Collecting logs..."
+          LOG=$(tail -n 50 $GITHUB_WORKSPACE/* 2>/dev/null || echo "no logs")
 
           printf '{
             "run_id": "%s",
@@ -40,8 +43,9 @@ jobs:
             "repository": "%s",
             "run_url": "https://github.com/%s/actions/runs/%s",
             "status": "failed",
-            "timestamp": "%s"
-          }'           "${{ github.run_id }}"           "${{ github.workflow }}"           "${{ github.job }}"           "${{ github.repository }}"           "${{ github.repository }}"           "${{ github.run_id }}"           "$ts" > debug.json
+            "timestamp": "%s",
+            "error_snippet": "%s"
+          }'           "${{ github.run_id }}"           "${{ github.workflow }}"           "${{ github.job }}"           "${{ github.repository }}"           "${{ github.repository }}"           "${{ github.run_id }}"           "$ts"           "$LOG" > debug.json
 
           content=$(base64 -w 0 debug.json)
           echo "CONTENT_DEBUG=$content" >> $GITHUB_ENV
@@ -52,4 +56,4 @@ jobs:
         with:
           path: memory/debug/run_${{ github.run_id }}.json
           content: ${{ env.CONTENT_DEBUG }}
-          message: debug failure
+          message: debug failure extended
