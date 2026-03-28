@@ -17,7 +17,7 @@ jobs:
         run: |
           echo '{"tree":[' > tree.json
           git ls-files | sed 's/.*/{"path":"&"},/' >> tree.json
-          sed -i '$ s/,$//'' tree.json
+          sed -i '$ s/,$///' tree.json
           echo ']}' >> tree.json
 
       - name: Build SOT (capture)
