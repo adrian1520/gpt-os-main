@@ -1,8 +1,8 @@
 {
-  "last_update": "2026-03-28T13:32:31.043969+00:00",
+  "last_update": "2026-03-28T13:35:51.643276+00:00",
   "repo_state": {
-    "files_count": 48,
-    "debug_runs": 24,
+    "files_count": 49,
+    "debug_runs": 25,
     "sessions": 2
   },
   "tree": [
@@ -44,6 +44,7 @@
     "memory/debug/run_23685041704.json",
     "memory/debug/run_23685167827.json",
     "memory/debug/run_23685844192.json",
+    "memory/debug/run_23686296403.json",
     "memory/session/.keep",
     "memory/session/current.json",
     "memory/source_of_truth.json",
@@ -71,7 +72,7 @@
     "memory/session/.keep",
     "memory/session/current.json"
   ],
-  "last_error": "memory/debug/run_23685844192.json",
+  "last_error": "memory/debug/run_23686296403.json",
   "current_focus": "stable",
   "live_session": {
     "run_id": "23682353617",
@@ -90,12 +91,6 @@
       "run_id": "23682645294",
       "error": "no logs",
       "timestamp": "20260328T094942",
-      "status": "failed"
-    },
-    {
-      "run_id": "23682610765",
-      "error": "no logs",
-      "timestamp": "20260328T094725",
       "status": "failed"
     }
   ]
