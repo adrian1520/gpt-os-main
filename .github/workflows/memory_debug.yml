@@ -1,8 +1,8 @@
 name: Debug Memory API-ONLY FIXED
 
 on:
-  push:
-    branches: [ main ]
+  repository_dispatch:
+    types: [write_memory_files]
 
 permissions:
   contents: write
@@ -17,7 +17,7 @@ jobs:
       - name: Build debug json
         run: |
           now=$(date -Is)
-          printf '{"run_id":"%s","timestamp":"%s"}\n' "${{ github.run_id }}" "$now" > debug.json
+          printf '{"run_id":"%s","timestamp":"%s"}\n' "${{ github.event.client_payload.run_id }}" "$now" > debug.json
 
       - name: Encode base64
         run: |
@@ -27,6 +27,6 @@ jobs:
       - name: Write via API action
         uses: ./.github/actions/api_write
         with:
-          path: memory/debug/run_${{ github.run_id }}.json
+          path: memory/debug/run_${{ github.event.client_payload.run_id }}.json
           content: ${{ env.CONTENT }}
           message: debug update
