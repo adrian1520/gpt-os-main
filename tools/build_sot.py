@@ -29,13 +29,27 @@ sessions = sorted(
     [f for f in files if f and f.startswith("memory/session/")]
 )
 
-# Last error (deterministic)
+# Last error
 last_error = debug_runs[-1] if debug_runs else None
+
+# Load last 10 errors
+def load_errors(debug_files):
+    errors = []
+    for path in reversed(debug_files[-10:]):
+        data = safe_load(path)
+        if data:
+            errors.append({
+                "run_id": data.get("run_id"),
+                "error": data.get("error_snippet"),
+                "timestamp": data.get("timestamp")
+            })
+    return errors
+
+error_list = load_errors(debug_runs)
 
 # Load live session
 session_current = safe_load("memory/session/current.json")
 
-# 🔥 INTERPRET STATE (IMPORTANT)
 def resolve_focus(session, debug_runs, sessions):
     if session and isinstance(session, dict):
         status = session.get("status")
@@ -51,18 +65,14 @@ def resolve_focus(session, debug_runs, sessions):
 
     if debug_runs:
         return "debug"
-
     if sessions:
         return "continue"
-
     return "init"
 
 current_focus = resolve_focus(session_current, debug_runs, sessions)
 
-# Timestamp
 now = datetime.datetime.utcnow().isoformat() + "Z"
 
-# Build SOT
 sot = {
     "last_update": now,
     "repo_state": {
@@ -74,9 +84,9 @@ sot = {
     "session_files": sessions[:10],
     "last_error": last_error,
     "current_focus": current_focus,
-    "live_session": session_current
+    "live_session": session_current,
+    "errors": error_list
 }
 
-# Save
 with open("sot.json", "w") as f:
     json.dump(sot, f, indent=2)
