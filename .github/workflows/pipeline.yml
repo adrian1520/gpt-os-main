@@ -2,6 +2,8 @@ name: GPT-OS Core Pipeline
 
 on:
   push:
+    branches:
+      - main
 
 permissions:
   contents: write
