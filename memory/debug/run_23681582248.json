@@ -1,0 +1,9 @@
+{
+  "run_id": "23681582248",
+  "workflow": "GPT-OS Core Pipeline",
+  "job": "pipeline",
+  "status": "failed",
+  "timestamp": "20260328T084518",
+  "error_snippet": "/home/runner/work/gpt-os-main/gpt-os-main/tools/build_sot.py:63: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  now = datetime.datetime.utcnow().isoformat() + "Z""
+}
