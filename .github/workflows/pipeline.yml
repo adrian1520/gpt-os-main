@@ -13,18 +13,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Handle write_execution
+      - name: Handle dynamic event
         run: |
           if [ -f events/write_execution.json ]; then
-            mkdir -p gpt-os-controller
-            echo "# EXECUTION SYSTEM" > gpt-os-controller/execution.md
+            target=$(jq -r '.target' events/write_execution.json)
+            content=$(jq -r '.content // ""' events/write_execution.json)
+
+            mkdir -p $(dirname "$target")
+            echo "$content" > "$target"
+
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add $target
+            git commit -m "event write [skip ci]" || echo "no changes"
+            git push
           fi
 
       - name: Build repo tree (REAL)
         run: |
           printf '{"tree":[' > tree.json
           git ls-files | while read f; do
-            printf '{"path":"%s"},' "$f" >> tree.json
+            printf '{"path":"%s",' "$f" >> tree.json
           done
           sed -i '$ s/,$//' tree.json
           printf ']}' >> tree.json
