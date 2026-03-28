@@ -1,0 +1,17 @@
+name: GPT-OS Debug
+
+on:
+  push:
+    paths:
+      - 'events/debug/**'\
+
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Auto debug
+        run: |
+          python tools/decision_engine.py
