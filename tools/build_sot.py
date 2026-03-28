@@ -1,12 +1,15 @@
 import json, datetime
 
-with open("tree.json") as f:
-    data = json.load(f)
+try:
+    with open("tree.json") as f:
+        data = json.load(f)
+except Exception:
+    data = {}
 
-files = [item["path"] for item in data.get("tree", [])]
+files = [item.get("path") for item in data.get("tree", []) if isinstance(item, dict) and "path" in item]
 
-debug_runs = [f for f in files if f.startswith("memory/debug/")]
-sessions = [f for f in files if f.startswith("memory/session/")]
+debug_runs = [f for f in files if f and f.startswith("memory/debug/")]
+sessions = [f for f in files if f and f.startswith("memory/session/")]
 
 last_error = debug_runs[-1] if debug_runs else None
 
@@ -32,4 +35,5 @@ sot = {
     "current_focus": current_focus
 }
 
-open("sot.json", "w").write(json.dumps(sot))
+with open("sot.json", "w") as f:
+    json.dump(sot, f)
