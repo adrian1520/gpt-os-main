@@ -42,13 +42,31 @@ jobs:
         run: |
           echo "$CONTENT" | head -c 200
 
-      - name: Write SOT via API
-        if: always()
-        uses: ./.github/actions/api_write
-        with:
-          path: memory/source_of_truth.json
-          content: ${{ env.CONTENT }}
-          message: update SOT
+      - name: Write SOT (direct API)
+        run: |
+          RESPONSE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository }}/contents/memory/source_of_truth.json || true)
+
+          SHA=$(echo "$RESPONSE" | jq -r '.sha // empty')
+
+          if [ -z "$SHA" ]; then
+            payload=$(jq -n \
+              --arg msg "update SOT" \
+              --arg content "$CONTENT" \
+               {message:$msg, content:$content}')
+          else
+            payload=$(jq -n \
+              --arg msg "update SOT" \
+              --arg content "$CONTENT" \
+              --arg sha "$SHA" \
+              '{message:$msg, content:$content, sha:$sha}')
+          fi
+
+          curl -X PUT \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "$payload" \
+            https://api.github.com/repos/${{ github.repository }}/contents/memory/source_of_truth.json
 
       - name: Decision engine
         run: python tools/decision_engine.py
