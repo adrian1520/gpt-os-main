@@ -53,7 +53,7 @@ jobs:
             payload=$(jq -n \
               --arg msg "update SOT" \
               --arg content "$CONTENT" \
-               {message:$msg, content:$content}')
+              '{message:$msg, content:$content}')
           else
             payload=$(jq -n \
               --arg msg "update SOT" \
