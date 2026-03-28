@@ -1,8 +1,8 @@
 name: Source Of Truth Builder API-DRIVEN
 
 on:
-  push:
-    branches: [ main ]
+  repository_dispatch:
+    types: [write_memory_files]
 
 permissions:
   contents: write
@@ -16,7 +16,7 @@ jobs:
 
       - name: Fetch repo tree (API)
         run: |
-          curl -s -H "Authorization: token ${{ github.token }}"             "https://api.github.com/repos/${{ github.repository }}/git/trees/main?recursive=1" > tree.json
+          curl -s -H "Authorization: Bearer ${{ github.token }}"             "https://api.github.com/repos/${{ github.repository }}/git/trees/main?recursive=1" > tree.json
 
       - name: Build SOT (Python)
         run: python tools/build_sot.py
