@@ -1,11 +1,10 @@
-name: Legal OS Pipeline API-DRIVEN
+name: Legal OS Pipeline (SINGLE PIPELINE)
 
 on:
   push:
 
 permissions:
   contents: write
-  actions: write
 
 jobs:
   pipeline:
@@ -14,24 +13,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Fetch event list
+      - name: Fetch events
         run: |
           curl -s -H "Authorization: Bearer ${{ github.token }}"             "https://api.github.com/repos/${{ github.repository }}/contents/events" > list.json
 
-      - name: Fetch latest event (content)
-        run: |
-          python scripts/parser.py
+      - name: Parse event
+        run: python scripts/parser.py
 
       - name: Run event engine
+        run: python scripts/event_engine.py parsed.json event_out.json
+
+      - name: Build SOT
+        run: python tools/build_sot.py
+
+      - name: Encode SOT
         run: |
-          python scripts/event_engine.py parsed.json event_out.json
+          content=$(base64 -w 0 sot.json)
+          echo "CONTENT=$content" >> $GITHUB_ENV
 
-      - name: Dispatch memory write (DEBUG)
-        run: |
-          printf '{"event_type":"write_memory_files","client_payload":{"run_id":"%s"}}' "${{ github.run_id }}" > payload.json
-
-          RESPONSE=$(curl -s -o response.txt -w "%{http_code}" -X POST             -H "Authorization: Bearer ${{ github.token }}"             -H "Accept: application/vnd.github+json"             -d @payload.json             https://api.github.com/repos/${{ github.repository }}/dispatches)
-
-          echo "HTTP STATUS: $RESPONSE"
-          echo "RESPONSE BODY:"
-          cat response.txt
+      - name: Write SOT via API
+        uses: ./.github/actions/api_write
+        with:
+          path: memory/source_of_truth.json
+          content: ${{ env.CONTENT }}
+          message: update SOT
