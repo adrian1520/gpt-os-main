@@ -24,7 +24,11 @@ jobs:
           content=$(base64 -w 0 sot.json)
           echo "CONTENT=$content" >> $GITHUB_ENV
 
-      - name: Write SOT via API
+      - name: Gateway check
+        run: python tools/gateway_check.py
+
+      - name: Write SOT via API (normal)
+        if: env.MODE != 'debug'
         uses: ./.github/actions/api_write
         with:
           path: memory/source_of_truth.json
@@ -34,11 +38,15 @@ jobs:
       - name: Decision engine
         run: python tools/decision_engine.py
 
+      - name: Act on decision (debug mode)
+        if: env.MODE == 'debug'
+        run: echo "System in DEBUG mode"
+
       - name: Act on decision (report failure)
         if: env.ACTION == 'report_failure'
         run: |
           echo "Failure detected → triggering dispatch"
-          curl -X POST             -H "Authorization: token ${{ github.token }}"             -H "Accept: application/vnd.github+json"             https://api.github.com/repos/${{ github.repository }}/dispatches             -d '{"event_type":"debug_failure"}'
+          curl -X POST -H "Authorization: token ${{ github.token }}" -H "Accept: application/vnd.github+json" https://api.github.com/repos/${{ github.repository }}/dispatches -d '{"event_type":"debug_failure"}'
 
       - name: Act on decision (monitor)
         if: env.ACTION == 'monitor'
