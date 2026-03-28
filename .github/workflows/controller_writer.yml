@@ -6,9 +6,11 @@ on:
       target:
         description: "file path"
         required: true
+        type: string
       content:
         description: "file content"
         required: true
+        type: string
 
 jobs:
   write:
