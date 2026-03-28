@@ -1,4 +1,4 @@
-name: Legal OS Pipeline (SINGLE PIPELINE)
+name: GPT-OS Core Pipeline
 
 on:
   push:
@@ -13,17 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Fetch events
-        run: |
-          curl -s -H "Authorization: Bearer ${{ github.token }}"             "https://api.github.com/repos/${{ github.repository }}/contents/events" > list.json
-
-      - name: Parse event
-        run: python scripts/parser.py
-
-      - name: Run event engine
-        run: python scripts/event_engine.py parsed.json event_out.json
-
-      - name: Build SOT
+      - name: Build Source of Truth
         run: python tools/build_sot.py
 
       - name: Encode SOT
