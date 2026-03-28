@@ -16,6 +16,72 @@ jobs:
       - name: Build repo tree (REAL)
         run: |
           printf '{"tree":[' > tree.json
-          git ls-files | awk '{printf "{\"path\":\"%s\"},", $0}' >> tree.json
+          git ls-files | while read f; do
+            printf '{"path":"%s"},' "$f" >> tree.json
+          done
           sed -i '$ s/,$//' tree.json
           printf ']}' >> tree.json
+
+      - name: Build SOT (capture)
+        run: |
+          set +e
+          python -W ignore tools/build_sot.py > output.log 2> error.log
+          echo "EXIT_CODE=$?" >> $GITHUB_ENV
+
+      - name: Encode SOT
+        run: |
+          content=$(base64 -w 0 sot.json)
+          echo "CONTENT=$content" >> $GITHUB_ENV
+
+      - name: Write SOT via API
+        if: always()
+        uses: ./.github/actions/api_write
+        with:
+          path: memory/source_of_truth.json
+          content: ${{ env.CONTENT }}
+          message: update SOT
+
+      - name: Decision engine
+        run: python tools/decision_engine.py
+
+      - name: Write session
+        if: always()
+        run: |
+          ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          printf '{"run_id":"%s","status":"%s","action":"%s","timestamp":"%s"}'           "${{ github.run_id }}"           "${{ job.status }}"           "${{ env.ACTION }}"           "$ts" > session.json
+
+          content=$(base64 -w 0 session.json)
+          echo "CONTENT_SESSION=$content" >> $GITHUB_ENV
+
+      - name: Save session
+        if: always()
+        uses: ./.github/actions/api_write
+        with:
+          path: memory/session/current.json
+          content: ${{ env.CONTENT_SESSION }}
+          message: update session
+
+      - name: Capture debug (real)
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then exit 0; fi
+
+          ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          LOG=$(tail -n 50 error.log 2>/dev/null || echo "no logs")
+
+          printf '{"run_id":"%s","workflow":"%s","job":"%s","status":"failed","timestamp":"%s","error_snippet":"%s"}'           "${{ github.run_id }}"           "${{ github.workflow }}"           "${{ github.job }}"           "$ts"           "$LOG" > debug.json
+
+          content=$(base64 -w 0 debug.json)
+          echo "CONTENT_DEBUG=$content" >> $GITHUB_ENV
+
+      - name: Save debug
+        if: always()
+        uses: ./.github/actions/api_write
+        with:
+          path: memory/debug/run_${{ github.run_id }}.json
+          content: ${{ env.CONTENT_DEBUG }}
+          message: debug real
+
+      - name: Cleanup debug cache
+        run: |
+          ls -t memory/debug/run_*.json 2>/dev/null | tail -n +11 | xargs -r rm
