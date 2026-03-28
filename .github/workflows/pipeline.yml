@@ -16,8 +16,8 @@ jobs:
       - name: Build SOT (capture)
         run: |
           set +e
-          python tools/build_sot.py > output.log 2> error.log
-          echo "EXIT_CODE=!?" >> $GITHUB_ENV
+          python -W ignore tools/build_sot.py > output.log 2> error.log
+          echo "EXIT_CODE=$?" >> $GITHUB_ENV
 
       - name: Encode SOT
         run: |
