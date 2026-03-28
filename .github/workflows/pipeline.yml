@@ -13,8 +13,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build Source of Truth
-        run: python tools/build_sot.py
+      - name: Build SOT (capture)
+        run: |
+          set +e
+          python tools/build_sot.py > output.log 2> error.log
+          echo "EXIT_CODE=1$?" >> $GITHUB_ENV
 
       - name: Encode SOT
         run: |
@@ -45,30 +48,32 @@ jobs:
         if: env.ACTION == 'idle'
         run: echo "System stable"
 
-      - name: Capture failure debug (extended)
-        if: failure()
+      - name: Capture debug (real)
+        if: always()
         run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            exit 0
+          fi
+
           ts=$(date -u +"%Y%m%dT%H%M%S")
-          LOG=$(tail -n 50 $GITHUB_WORKSPACE/* 2>/dev/null || echo "no logs")
+          LOG=$(tail -n 50 error.log 2>/dev/null || echo "no logs")
 
           printf '{
             "run_id": "%s",
             "workflow": "%s",
             "job": "%s",
-            "repository": "%s",
-            "run_url": "https://github.com/%s/actions/runs/%s",
             "status": "failed",
             "timestamp": "%s",
             "error_snippet": "%s"
-          }'           "${{ github.run_id }}"           "${{ github.workflow }}"           "${{ github.job }}"           "${{ github.repository }}"           "${{ github.repository }}"           "${{ github.run_id }}"           "$ts"           "$LOG" > debug.json
+          }'           "${{ github.run_id }}"           "${{ github.workflow }}"           "${{ github.job }}"           "$ts"           "$LOG" > debug.json
 
           content=$(base64 -w 0 debug.json)
           echo "CONTENT_DEBUG=$content" >> $GITHUB_ENV
 
-      - name: Save debug via API
-        if: failure()
+      - name: Save debug
+        if: always()
         uses: ./.github/actions/api_write
         with:
           path: memory/debug/run_${{ github.run_id }}.json
           content: ${{ env.CONTENT_DEBUG }}
-          message: debug failure extended
+          message: debug real
