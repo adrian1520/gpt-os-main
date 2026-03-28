@@ -20,7 +20,7 @@ jobs:
             content=$(jq -r '.content // ""' events/write_execution.json)
 
             mkdir -p $(dirname "$target")
-            echo "$content" > "$target"
+            echo "$content" | base64 -d > "$target"
 
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
