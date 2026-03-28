@@ -28,12 +28,13 @@ jobs:
           content: ${{ env.CONTENT }}
           message: update SOT
 
+      - name: Decision engine
+        run: python tools/decision_engine.py
+
       - name: Capture failure debug (extended)
         if: failure()
         run: |
           ts=$(date -u +"%Y%m%dT%H%M%S")
-
-          echo "Collecting logs..."
           LOG=$(tail -n 50 $GITHUB_WORKSPACE/* 2>/dev/null || echo "no logs")
 
           printf '{
@@ -55,5 +56,5 @@ jobs:
         uses: ./.github/actions/api_write
         with:
           path: memory/debug/run_${{ github.run_id }}.json
-          content: ${{ env.CONTENT_DEBUG }}
+          content: ${{ env.CONTENT_DEBUG}}
           message: debug failure extended
