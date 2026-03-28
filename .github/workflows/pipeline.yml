@@ -13,6 +13,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Build repo tree (REAL)
+        run: |
+          echo '{"tree":[' > tree.json
+          git ls-files | sed 's/.*/{"path":"&"},/' >> tree.json
+          sed -i '$ s/,$//'' tree.json
+          echo ']}' >> tree.json
+
       - name: Build SOT (capture)
         run: |
           set +e
@@ -60,24 +67,6 @@ jobs:
           path: memory/session/current.json
           content: ${{ env.CONTENT_SESSION }}
           message: update session
-
-      - name: Act on decision (debug mode)
-        if: env.MODE == 'debug'
-        run: echo "System in DEBUG mode"
-
-      - name: Act on decision (report failure)
-        if: env.ACTION == 'report_failure'
-        run: |
-          echo "Failure detected → triggering dispatch"
-          curl -X POST -H "Authorization: token ${{ github.token }}" -H "Accept: application/vnd.github+json" https://api.github.com/repos/${{ github.repository }}/dispatches -d '{"event_type":"debug_failure"}'
-
-      - name: Act on decision (monitor)
-        if: env.ACTION == 'monitor'
-        run: echo "System running normally"
-
-      - name: Act on decision (idle)
-        if: env.ACTION == 'idle'
-        run: echo "System stable"
 
       - name: Capture debug (real)
         if: always()
