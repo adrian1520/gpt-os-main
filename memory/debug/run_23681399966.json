@@ -1,0 +1,45 @@
+{
+  "run_id": "23681399966",
+  "workflow": "GPT-OS Core Pipeline",
+  "job": "pipeline",
+  "repository": "adrian1520/gpt-os-main",
+  "run_url": "https://github.com/adrian1520/gpt-os-main/actions/runs/23681399966",
+  "status": "failed",
+  "timestamp": "20260328T083348",
+  "error_snippet": "==> /home/runner/work/gpt-os-main/gpt-os-main/README.md <==
+# gpt-os-main
+GPT-OS main repository
+
+==> /home/runner/work/gpt-os-main/gpt-os-main/cases <==
+
+==> /home/runner/work/gpt-os-main/gpt-os-main/events <==
+
+==> /home/runner/work/gpt-os-main/gpt-os-main/memory <==
+
+==> /home/runner/work/gpt-os-main/gpt-os-main/meta <==
+
+==> /home/runner/work/gpt-os-main/gpt-os-main/payload.json <==
+{
+  "message": "update SOT",
+  "content": "ewogICJsYXN0X3VwZGF0ZSI6ICIyMDI2LTAzLTI4VDA4OjMzOjQ4LjMyNzM3MloiLAogICJyZXBvX3N0YXRlIjogewogICAgImZpbGVzX2NvdW50IjogMCwKICAgICJkZWJ1Z19ydW5zIjogMCwKICAgICJzZXNzaW9ucyI6IDAKICB9LAogICJkZWJ1Z19maWxlcyI6IFtdLAogICJzZXNzaW9uX2ZpbGVzIjogW10sCiAgImxhc3RfZXJyb3IiOiBudWxsLAogICJjdXJyZW50X2ZvY3VzIjogImluaXQiLAogICJsaXZlX3Nlc3Npb24iOiBudWxsCn0="
+}
+
+==> /home/runner/work/gpt-os-main/gpt-os-main/scripts <==
+
+==> /home/runner/work/gpt-os-main/gpt-os-main/sot.json <==
+{
+  "last_update": "2026-03-28T08:33:48.327372Z",
+  "repo_state": {
+    "files_count": 0,
+    "debug_runs": 0,
+    "sessions": 0
+  },
+  "debug_files": [],
+  "session_files": [],
+  "last_error": null,
+  "current_focus": "init",
+  "live_session": null
+}
+==> /home/runner/work/gpt-os-main/gpt-os-main/tools <==
+no logs"
+}
