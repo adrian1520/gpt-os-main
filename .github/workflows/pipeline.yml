@@ -9,7 +9,6 @@ permissions:
 
 jobs:
   pipeline:
-    if: github.actor != 'github-actions'
     runs-on: ubuntu-latest
 
     steps:
