@@ -1,6 +1,9 @@
 name: controller-writer
 
 on:
+  push:
+    paths:
+      - '.github/workflows/controller_writer.yml'
   workflow_dispatch:
     inputs:
       target:
@@ -17,11 +20,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: Write file
         run: |
           mkdir -p $(dirname "${{ github.event.inputs.target }}")
-          cat << 'EOF' > "${{ github.event.inputs.target }}"
+          cat << 'EOF' > "${s{github.event.inputs.target }}"
 ${{ github.event.inputs.content }}
 EOF
 
