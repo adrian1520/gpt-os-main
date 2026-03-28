@@ -1,4 +1,5 @@
 import json, os, sys
+from datetime import datetime, UTC
 
 def load_json(path):
     try:
@@ -34,7 +35,7 @@ def main():
         "action": action,
         "reason": reason,
         "last_error": last_error,
-        "timestamp": ___import__("datetime").datetime.utcnow().isoformat() + "Z"
+        "timestamp": datetime.now(UTC).isoformat()
     }
 
     with open("decision.json", "w") as f:
