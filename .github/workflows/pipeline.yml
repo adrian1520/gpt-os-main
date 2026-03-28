@@ -22,7 +22,11 @@ jobs:
             content=$(jq -r '.content // ""' events/write_execution.json)
 
             mkdir -p $(dirname "$target")
-            echo "$content" | base64 -d > "$target"
+            if echo "$content" | base64 -d > /dev/null 2>&1; then
+              echo "$content" | base64 -d > "$target"
+            else
+              echo "$content" > "$target"
+            fi
 
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -35,7 +39,7 @@ jobs:
         run: |
           printf '{"tree":[' > tree.json
           git ls-files | while read f; do
-            printf '{"path":"%s",' "$f" >> tree.json
+            printf '{"path":"%s"},' "$f" >> tree.json
           done
           sed -i '$ s/,$//' tree.json
           printf ']}' >> tree.json
