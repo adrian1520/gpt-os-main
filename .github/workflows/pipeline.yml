@@ -26,11 +26,8 @@ jobs:
         run: |
           python scripts/event_engine.py parsed.json event_out.json
 
-      - name: Dispatch memory write
+      - name: Dispatch memory write (SAFE JSON)
         run: |
-          curl -X POST             -H "Authorization: Bearer ${{ github.token }}"             -H "Accept: application/vnd.github+json"             https://api.github.com/repos/${{ github.repository }}/dispatches             -d '{
-              "event_type": "write_memory_files",
-              "client_payload": {
-                "run_id": "${{ github.run_id }}"
-              }
-            }'
+          payload=$(jq -n             --arg run_id "${{ github.run_id }}"             '{event_type:"write_memory_files", client_payload:{run_id:$run_id}}')
+
+          curl -X POST             -H "Authorization: Bearer ${{ github.token }}"             -H "Accept: application/vnd.github+json"             -d "$payload"             https://api.github.com/repos/${{ github.repository }}/dispatches
