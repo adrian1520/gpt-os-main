@@ -20,13 +20,11 @@ files = [
     if isinstance(item, dict) and "path" in item
 ]
 
-debug_runs = sorted(
-    [f for f in files if f and f.startswith("memory/debug/")]
-)
+# 🔥 TREE
+tree_paths = [f for f in files if f]
 
-sessions = sorted(
-    [f for f in files if f and f.startswith("memory/session/")]
-)
+debug_runs = sorted([f for f in files if f and f.startswith("memory/debug/")])
+sessions = sorted([f for f in files if f and f.startswith("memory/session/")])
 
 last_error = debug_runs[-1] if debug_runs else None
 
@@ -38,7 +36,8 @@ def load_errors(debug_files):
             errors.append({
                 "run_id": data.get("run_id"),
                 "error": data.get("error_snippet"),
-                "timestamp": data.get("timestamp")
+                "timestamp": data.get("timestamp"),
+                "status": data.get("status")
             })
     return errors
 
@@ -65,6 +64,15 @@ def resolve_focus(session, debug_runs, sessions):
 
 current_focus = resolve_focus(session_current, debug_runs, sessions)
 
+def normalize_sot(sot):
+    if not sot.get("tree"):
+        sot["tree"] = []
+    if not sot.get("errors"):
+        sot["errors"] = []
+    if not sot.get("live_session"):
+        sot["live_session"] = None
+    return sot
+
 now = datetime.now(UTC).isoformat()
 
 sot = {
@@ -74,6 +82,7 @@ sot = {
         "debug_runs": len(debug_runs),
         "sessions": len(sessions)
     },
+    "tree": tree_paths[:100],
     "debug_files": debug_runs[:10],
     "session_files": sessions[:10],
     "last_error": last_error,
@@ -81,6 +90,8 @@ sot = {
     "live_session": session_current,
     "errors": error_list
 }
+
+sot = normalize_sot(sot)
 
 with open("sot.json", "w") as f:
     json.dump(sot, f, indent=2)
