@@ -1,11 +1,101 @@
 {
-  "last_update": null,
+  "last_update": "2026-03-28T10:28:23.860804+00:00",
   "repo_state": {
-    "files_count": 0,
-    "debug_runs": 0,
-    "sessions": 0
+    "files_count": 41,
+    "debug_runs": 20,
+    "sessions": 2
   },
-  "debug_files": [],
-  "session_files": [],
-  "current_focus": null
+  "tree": [
+    ".github/actions/api_write/action.yml",
+    ".github/workflows/pipeline.yml",
+    "README.md",
+    "cases/.gitkeep",
+    "cases/_template/case.json",
+    "cases/_template/documents/.gitkeep",
+    "cases/_template/risk.json",
+    "cases/_template/status.json",
+    "cases/_template/timeline.md",
+    "events/.keep",
+    "events/events/test.json",
+    "memory/debug/.keep",
+    "memory/debug/run_23681377137.json",
+    "memory/debug/run_23681399966.json",
+    "memory/debug/run_23681582248.json",
+    "memory/debug/run_23681677641.json",
+    "memory/debug/run_23681752906.json",
+    "memory/debug/run_23681876366.json",
+    "memory/debug/run_23681883090.json",
+    "memory/debug/run_23681914471.json",
+    "memory/debug/run_23682282172.json",
+    "memory/debug/run_23682289144.json",
+    "memory/debug/run_23682319749.json",
+    "memory/debug/run_23682353617.json",
+    "memory/debug/run_23682604001.json",
+    "memory/debug/run_23682610765.json",
+    "memory/debug/run_23682645294.json",
+    "memory/debug/run_23682678327.json",
+    "memory/debug/run_23682865519.json",
+    "memory/debug/run_23683017463.json",
+    "memory/debug/run_23683077906.json",
+    "memory/session/.keep",
+    "memory/session/current.json",
+    "memory/source_of_truth.json",
+    "meta/schema/case.schema.json",
+    "meta/schema/document.schema.json",
+    "scripts/event_engine.py",
+    "scripts/parser.py",
+    "tools/build_sot.py",
+    "tools/decision_engine.py",
+    "tools/gateway_check.py"
+  ],
+  "debug_files": [
+    "memory/debug/.keep",
+    "memory/debug/run_23681377137.json",
+    "memory/debug/run_23681399966.json",
+    "memory/debug/run_23681582248.json",
+    "memory/debug/run_23681677641.json",
+    "memory/debug/run_23681752906.json",
+    "memory/debug/run_23681876366.json",
+    "memory/debug/run_23681883090.json",
+    "memory/debug/run_23681914471.json",
+    "memory/debug/run_23682282172.json"
+  ],
+  "session_files": [
+    "memory/session/.keep",
+    "memory/session/current.json"
+  ],
+  "last_error": "memory/debug/run_23683077906.json",
+  "current_focus": "stable",
+  "live_session": {
+    "run_id": "23682353617",
+    "status": "success",
+    "action": "init",
+    "timestamp": "2026-03-28T09:31:34Z"
+  },
+  "errors": [
+    {
+      "run_id": "23682678327",
+      "error": "no logs",
+      "timestamp": "20260328T095139",
+      "status": "failed"
+    },
+    {
+      "run_id": "23682645294",
+      "error": "no logs",
+      "timestamp": "20260328T094942",
+      "status": "failed"
+    },
+    {
+      "run_id": "23682610765",
+      "error": "no logs",
+      "timestamp": "20260328T094725",
+      "status": "failed"
+    },
+    {
+      "run_id": "23682289144",
+      "error": "",
+      "timestamp": "20260328T092741",
+      "status": "failed"
+    }
+  ]
 }
