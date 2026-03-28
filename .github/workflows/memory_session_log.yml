@@ -1,10 +1,8 @@
 name: Memory Session API-ONLY
 
 on:
-  push:
-    branches: [ main ]
-    paths-ignore:
-      - 'memory/**'
+  repository_dispatch:
+    types: [write_memory_files]
 
 permissions:
   contents: write
@@ -14,10 +12,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v4
+
       - name: Build session json
         run: |
           now=$(date -Is)
-          echo "{"timestamp":"$now"}" > session.json
+          echo "{\"timestamp\":\"$now\"}" > session.json
 
       - name: Encode base64
         run: |
@@ -27,6 +27,6 @@ jobs:
       - name: Write via API action
         uses: ./.github/actions/api_write
         with:
-          path: memory/session/session_${{ github.run_id }}.json
+          path: memory/session/session_${{ github.event.client_payload.run_id }}.json
           content: ${{ env.CONTENT }}
           message: session update
