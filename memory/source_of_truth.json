@@ -1,8 +1,8 @@
 {
-  "last_update": "2026-03-28T13:35:51.643276+00:00",
+  "last_update": "2026-03-28T13:42:38.259142+00:00",
   "repo_state": {
-    "files_count": 49,
-    "debug_runs": 25,
+    "files_count": 51,
+    "debug_runs": 26,
     "sessions": 2
   },
   "tree": [
@@ -20,6 +20,7 @@
     "gpt-os-controller/README.md",
     "gpt-os-controller/knowledge.md",
     "gpt-os-controller/prompt.md",
+    "gpt-os-controller/rules.md",
     "memory/debug/.keep",
     "memory/debug/run_23681377137.json",
     "memory/debug/run_23681399966.json",
@@ -45,6 +46,7 @@
     "memory/debug/run_23685167827.json",
     "memory/debug/run_23685844192.json",
     "memory/debug/run_23686296403.json",
+    "memory/debug/run_23686351770.json",
     "memory/session/.keep",
     "memory/session/current.json",
     "memory/source_of_truth.json",
@@ -72,7 +74,7 @@
     "memory/session/.keep",
     "memory/session/current.json"
   ],
-  "last_error": "memory/debug/run_23686296403.json",
+  "last_error": "memory/debug/run_23686351770.json",
   "current_focus": "stable",
   "live_session": {
     "run_id": "23682353617",
@@ -85,12 +87,6 @@
       "run_id": "23682678327",
       "error": "no logs",
       "timestamp": "20260328T095139",
-      "status": "failed"
-    },
-    {
-      "run_id": "23682645294",
-      "error": "no logs",
-      "timestamp": "20260328T094942",
       "status": "failed"
     }
   ]
