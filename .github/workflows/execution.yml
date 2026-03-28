@@ -1,0 +1,36 @@
+name: GPT-OS Execution
+
+on:
+  push:
+    paths:
+      - 'events/execution/**'
+
+permissions:
+  contents: write
+
+jobs:
+  execution:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Handle execution event
+        run: |
+          if [ -f events/execution/write.json ]; then
+            target=$(jq -r '.target' events/execution/write.json)
+            content=$(jq -r '.content // ""' events/execution/write.json)
+
+            mkdir -p $(dirname "$target")
+            if printf "%s" "$content" | base64 -d > /dev/null 2>&1; then
+              printf "%s" "$content" | base64 -d > "$target"
+            else
+              printf "%s" "$content" > "$target"
+            fi
+
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add $target
+            git commit -m "execution write [skip ci]" || echo "no changes"
+            git push
+          fi
