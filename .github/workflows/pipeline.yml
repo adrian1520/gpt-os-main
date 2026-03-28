@@ -13,34 +13,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Write debug log
-        run: |
-          ts=$(date -u +"%Y%m%dT%H%M%S")
-          echo '{"timestamp":"'"$ts"'","status":"running"}' > debug.json
-          content=$(base64 -w 0 debug.json)
-          echo "CONTENT_DEBUG=$content" >> $GITHUB_ENV
-
-      - name: Save debug via API
-        uses: ./.github/actions/api_write
-        with:
-          path: memory/debug/run_${{ github.run_id }}.json
-          content: ${{ env.CONTENT_DEBUG }}
-          message: debug log
-
-      - name: Write session log
-        run: |
-          ts=$(date -u +"%Y%m%dT%H%M%S")
-          echo '{"timestamp":"'"$ts"'","stage":"pipeline"}' > session.json
-          content=$(base64 -w 0 session.json)
-          echo "CONTENT_SESSION=$content" >> $GITHUB_ENV
-
-      - name: Save session via API
-        uses: ./.github/actions/api_write
-        with:
-          path: memory/session/session_${{ github.run_id }}.json
-          content: ${{ env.CONTENT_SESSION }}
-          message: session log
-
       - name: Build Source of Truth
         run: python tools/build_sot.py
 
@@ -55,3 +27,29 @@ jobs:
           path: memory/source_of_truth.json
           content: ${{ env.CONTENT }}
           message: update SOT
+
+      - name: Capture failure debug
+        if: failure()
+        run: |
+          ts=$(date -u +"%Y%m%dT%H%M%S")
+
+          printf '{
+            "run_id": "%s",
+            "workflow": "%s",
+            "job": "%s",
+            "repository": "%s",
+            "run_url": "https://github.com/%s/actions/runs/%s",
+            "status": "failed",
+            "timestamp": "%s"
+          }'           "${{ github.run_id }}"           "${{ github.workflow }}"           "${{ github.job }}"           "${{ github.repository }}"           "${{ github.repository }}"           "${{ github.run_id }}"           "$ts" > debug.json
+
+          content=$(base64 -w 0 debug.json)
+          echo "CONTENT_DEBUG=$content" >> $GITHUB_ENV
+
+      - name: Save debug via API
+        if: failure()
+        uses: ./.github/actions/api_write
+        with:
+          path: memory/debug/run_${{ github.run_id }}.json
+          content: ${{ env.CONTENT_DEBUG }}
+          message: debug failure
