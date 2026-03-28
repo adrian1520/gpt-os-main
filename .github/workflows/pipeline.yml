@@ -22,10 +22,10 @@ jobs:
             content=$(jq -r '.content // ""' events/write_execution.json)
 
             mkdir -p $(dirname "$target")
-            if echo "$content" | base64 -d > /dev/null 2>&1; then
-              echo "$content" | base64 -d > "$target"
+            if printf "%s" "$content" | base64 -d > /dev/null 2>&1; then
+              printf "%s" "$content" | base64 -d > "$target"
             else
-              echo "$content" > "$target"
+              printf "%s" "$content" > "$target"
             fi
 
             git config user.name "github-actions[bot]"
