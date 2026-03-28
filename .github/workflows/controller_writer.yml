@@ -1,0 +1,32 @@
+name: controller-writer
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "file path"
+        required: true
+      content:
+        description: "file content"
+        required: true
+
+jobs:
+  write:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Write file
+        run: |
+          mkdir -p $(dirname "${{ github.event.inputs.target }}")
+          cat << 'EOF' > "${{ github.event.inputs.target }}"
+${{ github.event.inputs.content }}
+EOF
+
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "controller write [skip ci]" || echo "no changes"
+          git push
