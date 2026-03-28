@@ -19,20 +19,18 @@ runs:
         RESPONSE=$(curl -s -H "Authorization: token ${{ github.token }}"           https://api.github.com/repos/${{ github.repository }}/contents/${{ inputs.path }} || true)
 
         SHA=$(echo "$RESPONSE" | jq -r '.sha // empty')
-        echo "SHA=$SHA" >> $GITHUB_ENV
+        echo "SHA=$SHA"
 
-    - name: Build payload
+    - name: Build payload safely
       shell: bash
       run: |
         if [ -z "$SHA" ]; then
-          payload=$(jq -n             --arg msg "${{ inputs.message }}"             --arg content "${{ inputs.content }}"             '{message:$msg, content:$content}')
+          jq -n             --arg msg "${{ inputs.message }}"             --arg content "${{ inputs.content }}"             '{message:$msg, content:$content}' > payload.json
         else
-          payload=$(jq -n             --arg msg "${{ inputs.message }}"             --arg content "${{ inputs.content }}"             --arg sha "$SHA"             '{message:$msg, content:$content, sha:$sha}')
+          jq -n             --arg msg "${{ inputs.message }}"             --arg content "${{ inputs.content }}"             --arg sha "$SHA"             '{message:$msg, content:$content, sha:$sha}' > payload.json
         fi
-
-        echo "PAYLOAD=$payload" >> $GITHUB_ENV
 
     - name: Write via API
       shell: bash
       run: |
-        curl -s -X PUT           -H "Authorization: token ${{ github.token }}"           -H "Content-Type: application/json"           -d "$PAYLOAD"           https://api.github.com/repos/${{ github.repository }}/contents/${{ inputs.path }}
+        curl -s -X PUT           -H "Authorization: token ${{ github.token }}"           -H "Content-Type: application/json"           -d @payload.json           https://api.github.com/repos/${{ github.repository }}/contents/${{ inputs.path }}
