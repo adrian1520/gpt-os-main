@@ -38,6 +38,29 @@ jobs:
       - name: Decision engine
         run: python tools/decision_engine.py
 
+      - name: Write session
+        if: always()
+        run: |
+          ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+          printf '{
+            "run_id": "%s",
+            "status": "%s",
+            "action": "%s",
+            "timestamp": "%s"
+          }'           "${{ github.run_id }}"           "${{ job.status }}"           "${{ env.ACTION }}"           "$ts" > session.json
+
+          content=$(base64 -w 0 session.json)
+          echo "CONTENT_SESSION=$content" >> $GITHUB_ENV
+
+      - name: Save session
+        if: always()
+        uses: ./.github/actions/api_write
+        with:
+          path: memory/session/current.json
+          content: ${{ env.CONTENT_SESSION }}
+          message: update session
+
       - name: Act on decision (debug mode)
         if: env.MODE == 'debug'
         run: echo "System in DEBUG mode"
