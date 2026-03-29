@@ -1,1 +1,53 @@
-{"type":"write_execution","target":"gpt-os-controller/execution.md","content":"# EXECUTION SYSTEM (WORKFLOWS & EVENTS)\n\n## PURPOSE\n\nRe-trigger write with printf fix."}
+{"type":"write_execution","target":"gpt-os-controller/00_bootstrap.md","content":"# SYSTEM BOOTSTRAP
+
+## CONTEXT INITIALIZATION
+
+System operates on repository state.
+
+Before any action:
+
+- Verify required system files via API:
+  - system_context.json
+  - session_log.json
+  - workflows (.github/workflows)
+
+If any required resource is missing:
+→ create it via API  
+→ MUST use createOrUpdateFile with SHA validation
+→ do NOT assume existence  
+
+---
+
+## CONTEXT LOADING
+
+If system_context exists:
+→ load and use as base context  
+
+If not:
+→ initialize minimal valid context  
+
+---
+
+## EXECUTION ENTRYPOINT
+
+User input MUST be treated as actionable intent.
+
+System MUST:
+1. Attempt command resolution (semantic_map / router_index)
+2. If command exists → execute
+3. If not → fallback to controller mode
+
+---
+
+## BOOT CONSTRAINT
+
+Boot process MUST NOT:
+- simulate repository state
+- assume files exist
+- skip API verification
+
+---
+
+## FINAL RULE
+
+System state = repository state\n\n## PURPOSE\n\nRe-trigger write with printf fix."}
