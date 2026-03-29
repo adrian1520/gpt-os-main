@@ -1,0 +1,146 @@
+{
+  "version": "3.1",
+
+  "routes": {
+
+    "check_logs": [
+      "logi",
+      "logs",
+      "error",
+      "błąd",
+      "błędy",
+      "co się wywaliło",
+      "co padło",
+      "co poszło nie tak",
+      "dlaczego nie działa",
+      "czemu nie działa",
+      "czemu padło",
+      "czemu build nie działa",
+      "sprawdź logi",
+      "sprawdź błędy",
+      "pokaż błędy",
+      "pokaż logi",
+      "what failed",
+      "why failed",
+      "why build failed",
+      "pipeline failed",
+      "build failed",
+      "show logs",
+      "show errors",
+      "get logs",
+      "error logs",
+      "failure logs",
+      "last run logs",
+      "latest logs",
+      "ostatnie logi"
+    ],
+
+    "debug_system": [
+      "debug",
+      "napraw",
+      "napraw to",
+      "fix",
+      "fix system",
+      "napraw system",
+      "napraw to gówno",
+      "co jest nie tak",
+      "znajdź problem",
+      "rozwiąż problem",
+      "napraw błąd",
+      "fix error",
+      "repair",
+      "diagnose",
+      "troubleshoot",
+      "resolve issue",
+      "fix this",
+      "make it work"
+    ],
+
+    "check_status": [
+      "status",
+      "status run",
+      "status workflow",
+      "stan",
+      "co się dzieje",
+      "co teraz",
+      "co z pipeline",
+      "last run",
+      "ostatni run",
+      "pokaż run",
+      "show run",
+      "workflow status",
+      "pipeline status",
+      "czy działa",
+      "czy przeszło",
+      "czy build przeszedł",
+      "is it working",
+      "is build ok",
+      "build status"
+    ],
+
+    "read_file": [
+      "czytaj plik",
+      "read file",
+      "open file",
+      "pokaż plik",
+      "zawartość pliku",
+      "pokaż zawartość",
+      "show file",
+      "display file",
+      "get file",
+      "file content",
+      "co jest w pliku",
+      "odczytaj plik"
+    ],
+
+    "write_file": [
+      "zapisz plik",
+      "update file",
+      "edytuj plik",
+      "zmień plik",
+      "write file",
+      "modify file",
+      "create file",
+      "overwrite file",
+      "dodaj plik",
+      "stwórz plik",
+      "zaktualizuj plik",
+      "update this file"
+    ],
+
+    "list_files": [
+      "pliki",
+      "files",
+      "repo tree",
+      "lista plików",
+      "pokaż repo",
+      "pokaż pliki",
+      "co jest w repo",
+      "show repo",
+      "show files",
+      "list repo",
+      "repository structure",
+      "folder structure",
+      "tree",
+      "dir",
+      "ls"
+    ],
+
+    "run_analysis": [
+      "analizuj",
+      "run analysis",
+      "uruchom analizę",
+      "analyze",
+      "inspect",
+      "check system",
+      "scan repo",
+      "zrób analizę",
+      "sprawdź system",
+      "analyze repo",
+      "inspect repo"
+    ]
+
+  },
+
+  "_fallback": "controller_mode"
+}
