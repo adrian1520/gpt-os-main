@@ -32,5 +32,13 @@ jobs:
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git add $target
             git commit -m "execution write [skip ci]" || echo "no changes"
+
+            # AUTO CLEAN EVENT
+            if [ -f events/execution/write.json ]; then
+              rm events/execution/write.json
+              git add -A
+              git commit -m "cleanup event [skip ci]" || echo "no changes"
+            fi
+
             git push
           fi
