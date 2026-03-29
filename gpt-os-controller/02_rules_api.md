@@ -1,5 +1,31 @@
 # RULES & API PROTOCOL
 
+## MEMORY ENFORCEMENT (CRITICAL)
+
+BEFORE ANY ACTION:
+- MUST read memory/source_of_truth.json via API
+- MUST validate SOT load
+- IF SOT not available => STOP
+- IF SOT not loaded => NO EXECUTION
+
+---
+
+## INTERPRETER LAYER (CRITICAL)
+
+- GPT MUST NOT perform final writes
+- GPT MUST NOT encode Base64
+- GPT MUST NOT construct final API payload
+
+ALL writes MUST go through Python interpreter layer:
+- normalize
+- validate
+- format
+- encode (base64)
+
+ONLY validated content may reach API
+
+---
+
 ## EXECUTION RULE
 
 If API or command is available:
@@ -12,19 +38,11 @@ If API or command is available:
 
 System MUST always follow priority:
 
-1. CRITICAL ERROR (system broken)
-2. DEBUG (fix failures)
-3. EXECUTION (user tasks)
-4. MEMORY (state updates)
-5. EVOLUTION (only if system stable)
-
----
-
-## FULL API CAPABILITY
-
-Available endpoints:
-
-GPT MUST use ONLY relevant endpoints per task.
+1. CRITICAL ERROR
+2. DEBUG
+3. EXECUTION
+4. MEMORY
+5. EVOLUTION
 
 ---
 
@@ -32,133 +50,26 @@ GPT MUST use ONLY relevant endpoints per task.
 
 Before ANY write:
 
-1. READ current file
-2. VALIDATE content
-3. FETCH SHA
-4. APPLY minimal change only
+1. READ file
+2. FETCH fresh SHA
+3. VALIDATE
+4. APPLY minimal change
+
+NEVER use cached SHA
+ALWAYS retry on conflict
 
 ---
 
-NEVER:
+## JSON SAFETY
 
-- overwrite full file without reason
-- modify unknown structure
-- write without reading first
+- simple JSON → echo OK
+- complex JSON → printf
+- large JSON → python json.dump
 
----
-
-IF unsure:
-→ STOP  
-→ do not write  
-
----
-
-## SIMPLICITY RULE
-
-Always choose:
-
-- minimal solution
-- minimal change
-- minimal number of files
-
-Avoid:
-
-- unnecessary modules
-- complex refactors
-- overengineering
-
-Goal:
-
-System stability > complexity
-
----
-
-## STABILITY RULE
-
-If system is not stable:
-→ BLOCK evolution  
-
-If failures exist:
-→ PRIORITIZE debug  
-
-If task already exists:
-→ DO NOT duplicate  
-
----
-
-## CORE OPERATIONS
-
-READ:
-- getFileContent
-- listRepositoryContents
-- getRepositoryTree
-
-WRITE:
-- createOrUpdateFile
-- deleteFile
-
-WORKFLOW:
-- repositoryDispatch
-- triggerWorkflow
-- listWorkflowRuns
-- listJobsForWorkflowRun
-
-GIT:
-- createBranch
-- updateBranchRef
-- compareCommits
-
----
-
-## WRITE RULES
-
-1. ALWAYS get SHA first  
-2. ALWAYS encode Base64 using Python  
-3. NEVER overwrite blindly  
-4. NEVER skip validation  
-
----
-
-## YAML SAFETY (CRITICAL)
-
-- NEVER use yaml.dump  
-- ALWAYS write YAML manually  
-- NEVER quote "on:"  
-- ALWAYS test indentation  
-- ALWAYS include [skip ci]  
-
----
-
-## DEBUG MODE
-
-If workflow fails:
-
-1. listWorkflowRuns  
-2. listJobsForWorkflowRun  
-3. analyze error deterministically (no speculation)  
-4. patch file  
-5. redeploy  
-
----
-
-## SELF-HEALING
-
-System must:
-
-- detect failure  
-- identify broken file  
-- fix and redeploy  
+NEVER build complex JSON inline in shell
 
 ---
 
 ## NO SIMULATION
 
-If API not called → action not done.
-
----
-
-## LIMITS
-
-- max 5 operations per cycle  
-- async only  
-- no loops  
+If API not called → action not done
