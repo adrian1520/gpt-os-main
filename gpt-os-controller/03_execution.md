@@ -133,3 +133,40 @@ If workflow fails:
 - ALWAYS use workflows for execution  
 - ALWAYS keep execution async  
 - ALWAYS stop after dispatch  
+
+
+---
+
+## INTERPRETER LAYER (ENFORCED)
+
+All write operations MUST follow interpreter pipeline:
+
+GPT:
+- generates RAW content only
+- MUST NOT encode Base64
+- MUST NOT construct API payload
+
+Python layer (tools/prepare_content.py):
+- normalize content
+- validate formatting
+- encode Base64
+
+API:
+- receives ONLY validated data
+
+---
+
+## WRITE PIPELINE (MANDATORY)
+
+GPT → RAW
+↓
+Python (normalize + encode)
+↓
+API write
+
+---
+
+## CRITICAL RULE
+
+NO direct write from GPT.
+
