@@ -22,11 +22,13 @@ jobs:
             content=$(jq -r '.content // ""' events/write_execution.json)
 
             mkdir -p $(dirname "$target")
-            if printf "%s" "$content" | base64 -d > /dev/null 2>&1; then
-              printf "%s" "$content" | base64 -d > "$target"
-            else
-              printf "%s" "$content" > "$target"
-            fi
+            printf "%s" "$content" > input.txt
+
+            python tools/prepare_content.py input.txt encoded.txt
+
+            CONTENT=$(cat encoded.txt)
+
+            printf "%s" "$CONTENT" | base64 -d > "$target"
 
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -39,7 +41,7 @@ jobs:
         run: |
           printf '{"tree":[' > tree.json
           git ls-files | while read f; do
-            printf '{"path":"%s"},' "$f" >> tree.json
+            printf '{"path":"%s"' "$f" >> tree.json
           done
           sed -i '$ s/,$//' tree.json
           printf ']}' >> tree.json
