@@ -15,15 +15,31 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Debug repo structure
+        run: |
+          echo "=== FILE TREE ==="
+          ls -R
+
       - name: Detect changed file
         id: detect
         run: |
           FILE=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | head -n 1)
           echo "file=$FILE" >> $GITHUB_OUTPUT
+          echo "Detected file: $FILE"
+
+      - name: Set PYTHONPATH
+        run: |
+          export PYTHONPATH=$PYTHONPATH:$(pwd)
+          echo "PYTHONPATH=$PYTHONPATH"
 
       - name: Run process_case
         run: |
-          echo "Processing: ${{ steps.detect.outputs.file }}"
+          echo "Running process_case..."
           python tools/process_case.py "${{ steps.detect.outputs.file }}"
 
       - name: Commit artifacts
