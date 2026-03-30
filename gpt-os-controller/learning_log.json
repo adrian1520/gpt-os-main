@@ -7,7 +7,9 @@
       "count": 0,
       "last_used": null,
       "steps": [],
-      "source": "sessions"
+      "source": "session",
+      "error_rate": 0.0,
+      "stability": 1.0
     }
   ]
 }
