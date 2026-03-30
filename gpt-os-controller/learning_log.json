@@ -1,0 +1,13 @@
+{
+  "version": "1.0",
+  "patterns": [
+    {
+      "id": "example_pattern",
+      "desc": "example usage pattern",
+      "count": 0,
+      "last_used": null,
+      "steps": [],
+      "source": "sessions"
+    }
+  ]
+}
