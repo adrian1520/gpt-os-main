@@ -1,6 +1,11 @@
 # tools/process_case.py
 
+import sys
 import os
+
+# FIX: ensure repo root is in PYTHONPATH
+sys.path.append(os.getcwd())
+
 import json
 
 from modules.parser.legal_parser import parse_document
@@ -25,7 +30,6 @@ def extract_case_id(path):
     parts = path.split(os.sep)
     for i, p in enumerate(parts):
         if p.startswith("NSM_"):
-            # handle NSM_765/25 → NSM_765_25
             if i + 1 < len(parts) and parts[i+1].isdigit():
                 return f"{p}_{parts[i+1]}"
             return p
