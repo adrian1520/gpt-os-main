@@ -2,59 +2,34 @@ name: GPT-OS Core Pipeline
 
 on:
   push:
-    branches:
-      - main
+    paths:
+      - 'cases/**/input/**'
 
 permissions:
   contents: write
 
 jobs:
-  pipeline:
+  process-case:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Handle dynamic event (RAW → interpreter)
+      - name: Detect changed case
+        id: detect
         run: |
-          if [ -f events/write_execution.json ]; then
-            target=$(jq -r '.target' events/write_execution.json)
-            content=$(jq -r '.content_raw // ""' events/write_execution.json)
+          FILE=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | head -n 1)
+          echo "file=$FILE" >> $GITHUB_OUTPUT
 
-            mkdir -p $(dirname "$target")
-
-            printf "%s" "$content" > input.txt
-
-            python tools/prepare_content.py input.txt encoded.txt
-
-            CONTENT=$(cat encoded.txt)
-
-            printf "%s" "$CONTENT" | base64 -d > "$target"
-
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add $target
-            git commit -m "event write [skip ci]" || echo "no changes"
-            git push
-          fi
-
-      - name: Build repo tree (REAL)
+      - name: Run processing (placeholder)
         run: |
-          printf '{"tree":[' > tree.json
-          git ls-files | while read f; do
-            printf '{"path":"%s"},' "$f" >> tree.json
-          done
-          sed -i '$ s/,$//' tree.json
-          printf ']}' >> tree.json
+          echo "Processing file: ${{ steps.detect.outputs.file }}"
+          echo "TODO: call parser + timeline + risk + strategy"
 
-      - name: Build SOT (capture)
+      - name: Commit artifacts
         run: |
-          set +e
-          python -W ignore tools/build_sot.py > output.log 2> error.log
-          echo "EXIT_CODE=$?" >> $GITHUB_ENV
-
-      - name: Decision engine
-        run: python tools/decision_engine.py
-
-      - name: Cleanup debug memory
-        run: python tools/cleanup_debug.py
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "auto pipeline update [skip ci]" || echo "no changes"
+          git push
