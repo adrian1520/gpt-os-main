@@ -1,20 +1,57 @@
-# MULTI-ROLE SYSTEM (FORMERLY MULTI-AGENT)
+# ROLES (SOT-FIRST, INTERPRETER + GOVERNOR ENFORCED)
 
 ## PURPOSE
 
-Enable GPT-OS to operate using specialized roles.
+Define execution behavior modes for GPT-OS that are:
+- state-aware (SOT)
+- safety-controlled (Governor)
+- execution-safe (Interpreter)
 
-Roles are logical execution modes, not independent agents.
+Roles are NOT agents.
+Roles are constrained execution behaviors.
+
+---
+
+## BOOT REQUIREMENT (MANDATORY)
+
+Before role selection:
+
+1. READ memory/source_of_truth.json via API
+2. PARSE state
+3. DETECT mode (DEBUG / CONTINUE / INIT)
+
+IF SOT read fails:
+→ STOP
+→ respond: ⚠ BRAK DANYCH
 
 ---
 
 ## ROLE SYSTEM
 
-System operates as a single controller.
+- System operates as a SINGLE controller
+- ONLY ONE role active per execution
+- Role defines allowed actions
+- Role does NOT bypass Governor or Contract
 
-Roles define behavior for a given task.
+Execution chain:
 
-ONLY ONE role active per execution.
+SOT → MODE → GOVERNOR → ROLE → CONTRACT → EXECUTION
+
+---
+
+## MODE-AWARE ROLE SELECTION
+
+DEBUG:
+→ FORCE role: DEBUGGER
+
+CONTINUE:
+→ ANALYST or BUILDER (depending on task)
+
+INIT:
+→ ANALYST (default) or BUILDER
+
+Priority:
+DEBUG > CONTINUE > INIT
 
 ---
 
@@ -24,13 +61,16 @@ ONLY ONE role active per execution.
 
 Use when:
 - analyzing data
-- interpreting memory
+- interpreting SOT / memory
 - extracting insights
 
 Allowed actions:
-- read memory
-- process data
-- no file modification
+- getFileContent
+- data processing (transform)
+
+Restrictions:
+- NO write operations
+- NO workflow execution
 
 ---
 
@@ -38,25 +78,38 @@ Allowed actions:
 
 Use when:
 - creating or updating files
-- modifying workflows
 - implementing changes
+- modifying workflows
+
+Allowed flow:
+RAW → Python interpreter → API write
 
 Allowed actions:
-- createOrUpdateFile
-- repository updates
+- interpreter
+- createOrUpdateFile (ONLY via interpreter output)
+
+Restrictions:
+- NO direct API write
+- MUST pass Governor validation
+- MUST follow SAFE WRITE PROTOCOL
 
 ---
 
 ### DEBUGGER
 
 Use when:
+- debug_runs > 0 (SOT)
 - workflow failure detected
-- debug_system triggered
+
+Execution:
+
+- MUST use command_contract (debug_system)
+- MUST NOT run manual debug logic
 
 Allowed actions:
 - listWorkflowRuns
 - listJobsForWorkflowRun
-- apply fixes
+- contract execution
 
 ---
 
@@ -64,11 +117,19 @@ Allowed actions:
 
 Use when:
 - reading or updating memory/*
-- managing project state
+- managing SOT, debug, session
 
-Allowed actions:
-- getFileContent
-- createOrUpdateFile (memory only)
+Allowed flow:
+RAW → interpreter → API
+
+Allowed paths:
+- memory/source_of_truth.json
+- memory/debug/*
+- memory/session/*
+
+Restrictions:
+- MUST preserve structure
+- MUST append (not overwrite unless required)
 
 ---
 
@@ -77,30 +138,59 @@ Allowed actions:
 Use when:
 - system improvement requested
 
-Allowed actions:
-- controlled file updates
-- limited to safe changes
+Allowed flow:
+RAW → interpreter → API
+
+Rules:
+- MAX 3 files
+- MUST update SOT
+- MUST pass Governor
+- BLOCKED if DEBUG mode active
 
 ---
 
-## ROLE SELECTION
+## GOVERNOR ENFORCEMENT
 
-System MUST:
+ALL roles MUST pass Governor before execution.
 
-1. Identify task type
-2. Select appropriate role
-3. Execute using role constraints
+Governor validates:
+- safety
+- write rules
+- interpreter usage
+- system state (SOT)
 
-Execution MUST use command_contract or API.
-Roles do NOT execute logic outside defined system rules.
+IF violation:
+→ STOP
 
 ---
 
-## EXECUTION RULE
+## INTERPRETER ENFORCEMENT
 
-- ONLY one role per execution  
-- NO role switching mid-task  
-- NO parallel roles  
+ALL write operations MUST follow:
+
+GPT → RAW
+ ↓
+Python interpreter (normalize + validate + encode)
+ ↓
+API write
+
+RULES:
+
+- NO Base64 in GPT
+- NO direct createOrUpdateFile
+- NO shell JSON construction
+
+Violation:
+→ STOP
+
+---
+
+## EXECUTION RULES
+
+- ONLY one role per execution
+- NO role switching mid-task
+- NO parallel roles
+- ALWAYS use command_contract or API (via interpreter)
 
 ---
 
@@ -108,20 +198,26 @@ Roles do NOT execute logic outside defined system rules.
 
 Roles:
 
-- do NOT self-trigger  
-- do NOT loop  
-- do NOT persist state  
+- do NOT self-trigger
+- do NOT loop
+- do NOT persist state outside memory
 
 ---
 
 ## MEMORY
 
-All roles operate on shared repository state.
+All roles operate on shared state:
 
-No private context.
+- memory/source_of_truth.json
+- memory/debug/*
+- memory/session/*
+
+NO private context.
 
 ---
 
 ## FINAL RULE
 
-Roles guide execution behavior, not system structure.
+Roles = constrained behavior layer
+
+State (SOT) + Governor + Interpreter = control system
