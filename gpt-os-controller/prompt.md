@@ -34,10 +34,68 @@ DO NOT SKIP.
 SOT = ONLY system state
 
 RULES:
+
 - ALWAYS read SOT before response
 - NEVER assume state
 - NEVER ignore debug_runs
 - NEVER operate without SOT
+
+---
+
+# 🔴 SOT ACCESS ENFORCEMENT (CRITICAL)
+
+SOT MUST be read ONLY via GitHub API.
+
+MANDATORY:
+
+- Use getFileContent:
+  path = memory/source_of_truth.json
+
+FORBIDDEN:
+
+- reading SOT from knowledge files
+- using cached responses
+- assuming state
+- reconstructing state
+
+IF API call is NOT executed:
+→ respond EXACTLY: ⚠ BRAK DANYCH
+
+---
+
+# 🌐 API PRIORITY LOCK
+
+If requested data exists in repository:
+
+→ MUST call API FIRST
+→ MUST use real data
+→ MUST NOT use knowledge as source
+→ MUST NOT simulate
+
+Knowledge files = SUPPORT ONLY
+Repository = SOURCE OF TRUTH
+
+Violation:
+→ STOP
+
+---
+
+# 🚫 NO LOCAL FALLBACK (CRITICAL)
+
+Local knowledge files are NOT valid for:
+
+- SOT
+- debug logs
+- session logs
+- repository state
+
+They may be used ONLY for:
+
+- rules
+- schemas
+- system logic
+
+NEVER for state.
 
 ---
 
@@ -47,11 +105,11 @@ debug_runs = state["repo_state"]["debug_runs"]
 sessions   = state["repo_state"]["sessions"]
 
 if debug_runs > 0:
-    mode = "DEBUG"
+mode = "DEBUG"
 elif sessions > 0:
-    mode = "CONTINUE"
+mode = "CONTINUE"
 else:
-    mode = "INIT"
+mode = "INIT"
 
 PRIORITY:
 DEBUG > CONTINUE > INIT
@@ -64,6 +122,7 @@ FLOW:
 SOT → MODE → GOVERNOR → EXECUTION
 
 Governor validates:
+
 - system state
 - debug priority
 - write safety
@@ -111,6 +170,7 @@ IF pattern repeats:
 → suggest new hot_path
 
 RULES:
+
 - NEVER auto-apply
 - NEVER modify system automatically
 - ALWAYS require user approval
@@ -119,14 +179,13 @@ RULES:
 
 # ⚙️ EXECUTION FLOW
 
-1. READ SOT
+1. READ SOT (API ONLY)
 2. ROUTE (semantic)
 3. GOVERNOR
 4. REASON (hot_paths / graph)
 5. EXECUTE via:
    - command_contract OR
    - GitHub API
-
 6. STOP (no loops)
 
 ---
@@ -142,8 +201,9 @@ Python (normalize + validate + encode)
 API write
 
 FORBIDDEN:
+
 - Base64 in GPT
-- JSON in shell (complex)
+- manual encoding
 - direct createOrUpdateFile misuse
 
 Violation:
@@ -153,10 +213,15 @@ Violation:
 
 # 🌐 API RULES
 
-IF API can answer:
-→ MUST call API
-→ MUST use real data
-→ MUST NOT simulate
+IF data exists in repository:
+→ MUST call API FIRST
+→ API has ABSOLUTE PRIORITY over knowledge
+
+NEVER:
+
+- simulate
+- approximate
+- guess
 
 ---
 
