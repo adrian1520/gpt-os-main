@@ -1,124 +1,110 @@
-# SYSTEM AWARENESS (CONTEXT-AWARE EXECUTION)
+# SYSTEM AWARENESS (STATE-AWARE EXECUTION)
 
 ## PURPOSE
 
-Enable GPT-OS to make decisions based on current repository state.
+Defines how GPT-OS understands system state using memory.
 
-System awareness is request-based, not continuous.
+System is STATELESS by default.
+State is restored via memory.
 
 ---
 
-## CONTEXT PRINCIPLE
+## MEMORY STRUCTURE
 
-GPT does NOT maintain global state.
+memory/
+├── debug/          # errors per run
+├── session/        # history per event
+└── source_of_truth.json  # global state
+
+---
+
+## SOURCE OF TRUTH (SOT)
+
+SOT is the ONLY source of system state.
 
 GPT MUST:
-
-- read required context via API
-- use only current data
-- avoid assumptions
-
----
-
-## CONTEXT SOURCES
-
-Use ONLY when relevant:
-
-- system_context.json
-- session_log.json
-- case_memory.json
-- workflow runs
-- specific files
-
-DO NOT load all data by default.
+- ALWAYS read memory/source_of_truth.json BEFORE any response
+- NEVER assume state
+- NEVER ignore debug_runs
 
 ---
 
-## STATE EVALUATION
+## GPT MEMORY BOOT PROTOCOL (MBP)
 
-System state is inferred dynamically from:
+Every request:
 
-- latest workflow runs
-- memory files
-- current task
-
-NO persistent state model required.
-
----
-
-## DECISION RULE
-
-Before action, GPT MAY:
-
-- read required files
-- check latest workflow status
-- verify task relevance
-
-ONLY if needed.
+1. LOAD SOT (API)
+2. PARSE STATE
+3. DETECT MODE
+4. LOAD CONTEXT
+5. RESPOND
 
 ---
 
-## PRIORITY ENGINE
+## MODE DETECTION
 
-Order:
+if debug_runs > 0:
+    mode = "DEBUG"
+elif sessions > 0:
+    mode = "CONTINUE"
+else:
+    mode = "INIT"
 
-1. CRITICAL (system failure)
-2. DEBUG (failures)
-3. EXECUTION (user tasks)
-4. EVOLUTION (improvements)
-
----
-
-## CONFLICT AVOIDANCE
-
-Before write:
-
-- verify file via getFileContent
-- use latest SHA
-- avoid duplicate operations
-
-No implicit conflict detection.
+Priority:
+DEBUG > CONTINUE > INIT
 
 ---
 
-## SYSTEM HEALTH (INFERRED)
+## CONTEXT LOADING
 
-OK:
-- latest workflow success
+DEBUG:
+→ load memory/debug/run_<latest>.json
 
-DEGRADED:
-- recent failures
+CONTINUE:
+→ load memory/session/session_<latest>.json
 
-CRITICAL:
-- repeated failures
+INIT:
+→ no memory
 
-Based on workflow data only.
+---
+
+## INTERNAL STATE
+
+context = {
+  "mode": mode,
+  "repo_state": ...,
+  "last_error": ...,
+  "last_action": ...
+}
 
 ---
 
 ## RESPONSE STRATEGY
 
-IF CRITICAL:
-â MUST execute debug_system via command_contract or API  
+DEBUG:
+"Ostatni run zakończył się błędem. Naprawić?"
 
-IF DEGRADED:
-â MUST prioritize execution of debug_system  
+CONTINUE:
+"Kontynuujemy ostatnie zadanie?"
 
-IF OK:
-â proceed with execution  
-
----
-
-## MEMORY USAGE
-
-- always prefer latest data  
-- avoid stale reads  
-- reload when required  
+INIT:
+"System gotowy. Co robimy?"
 
 ---
 
-## FINAL RULE
+## HARD RULES
 
-System awareness = read â decide â act (single cycle)
+- ALWAYS read SOT before response
+- NEVER guess state
+- NEVER ignore debug_runs
+- NEVER reset if data exists
 
-No loops. No persistent awareness.
+---
+
+## FINAL MODEL
+
+GPT = stateless engine
++
+memory (SOT) = state
+=
+STATEFUL SYSTEM
