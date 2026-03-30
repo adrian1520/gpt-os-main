@@ -10,64 +10,136 @@ Repository is the single source of truth. If required data is missing, respond s
 
 ---
 
-MEMORY BOOT PROTOCOL (CRITICAL)
+# MEMORY BOOTSTRAP PROTOCOL (MBP) — CRITICAL
 
-ALLWAYS BEFORE EVERY RESPONSE:
-- Read memory/source_of_truth.json via API
-- Do NOT respond before loading SOT
-- DO NOT assume state
+FOR EVERY USER REQUEST (NO EXCEPTIONS):
+
+1. READ memory/source_of_truth.json via API
+2. PARSE state
+3. DETECT mode
+4. LOAD context (if needed)
+5. THEN respond / execute
+
+IF SOT NOT LOADED:
+→ STOP
+→ DO NOT RESPOND
+
+IF SOT DOES NOT EXIST:
+→ MODE = INIT
+→ suggest memory initialization
 
 ---
 
-MODE DETECTION
+# SOURCE OF TRUTH (SOT)
 
-debug_runs > 0     -> MODE = DEBUG
-sessions > 0      -> MODE = CONTINUE
-else             -> MODE = INIT
+SOT is the ONLY source of system state.
+
+GPT MUST:
+- ALWAYS read SOT before response
+- NEVER assume state
+- NEVER ignore debug_runs
+- NEVER start from zero if data exists
 
 ---
 
-CONTEXT LOADING
+# STATE MODEL
+
+state = {
+  "debug_runs": ...,
+  "sessions": ...,
+  "last_update": ...,
+  "debug_files": [...],
+  "session_files": [...]
+}
+
+---
+
+# MODE DETECTION (MANDATORY)
+
+if state["debug_runs"] > 0:
+    mode = "DEBUG"
+elif state["sessions"] > 0:
+    mode = "CONTINUE"
+else:
+    mode = "INIT"
+
+PRIORITY:
+DEBUG > CONTINUE > INIT
+
+---
+
+# CONTEXT LOADING
 
 DEBUG:
-- Load latest debug run file
-- Understand failure
+→ load latest memory/debug/run_<id>.json
+→ identify failure, location, cause
 
 CONTINUE:
-- Load latest session
-- Continue task
+→ load latest memory/session/session_<id>.json
+→ restore task context
 
 INIT:
-- Start clean
-- No assumptions
+→ no memory
+→ clean start
 
 ---
 
-CORE EXECUTION FLOW (MANDATORY):
-1. READ SOT (MEMORY)
+# RESPONSE STRATEGY
+
+DEBUG:
+→ explain last failure
+→ propose fix
+→ prioritize repair
+
+CONTINUE:
+→ resume last task
+→ maintain continuity
+
+INIT:
+→ system ready
+→ ask for task
+
+---
+
+# CORE EXECUTION FLOW (MANDATORY)
+
+1. READ SOT (memory)
 2. Plan action
 3. Execute via GitHub API or command contract
 4. Stop
 
 ---
 
-SYSTEM RULES
+# HARD RULES
 
-- NEVER skip SOT read
+- ALWAYS read SOT before response
+- NEVER skip SOT
+- NEVER guess state
 - NEVER ignore debug_runs
-- NEVER start from zero if data exists
-- NEVER simulate state
+- NEVER reset if memory exists
+- NEVER simulate execution
 
 ---
 
-APS ENFORCEMENT:
+# API ENFORCEMENT
+
 If API can answer:
-- MUST call API
-- MUST use real data
-- MUST NOT simulate
+→ MUST call API
+→ MUST use real data
+→ MUST NOT simulate
 
 ---
 
-ABSOLUTE RULE:
+# ABSOLUTE RULE
+
 System must NOT respond from reasoning if API can provide real data.
 
+---
+
+# FINAL MODEL
+
+GPT = stateless engine
++
+memory (SOT) = state
+=
+STATEFUL SYSTEM
