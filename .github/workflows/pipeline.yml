@@ -38,14 +38,28 @@ jobs:
           echo "PYTHONPATH=$PYTHONPATH"
 
       - name: Run process_case
+        id: run_step
         run: |
           echo "Running process_case..."
-          python tools/process_case.py "${{ steps.detect.outputs.file }}"
+          python tools/process_case.py "${{ steps.detect.outputs.file }}" && echo "SUCCESS" > status.txt || echo "FAIL" > status.txt
+
+      - name: Log result
+        run: |
+          mkdir -p memory/debug
+          STATUS=$(cat status.txt)
+          TS=$(date +%s)
+
+          if [ "$STATUS" = "SUCCESS" ]; then
+            echo "{\"status\":\"success\",\"timestamp\":\"$TS\"}" > memory/debug/run_$TS.json
+          else
+            echo "{\"status\":\"failure\",\"timestamp\":\"$TS\"}" > memory/debug/run_$TS.json
+            echo "Pipeline failed"
+          fi
 
       - name: Commit artifacts
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add .
-          git commit -m "auto process case [skip ci]" || echo "no changes"
+          git commit -m "auto process case + log [skip ci]" || echo "no changes"
           git push
