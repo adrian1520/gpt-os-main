@@ -1,10 +1,50 @@
-# GOVERNOR (CONTROL LAYER)
+# GOVERNOR (SOT-FIRST, INTERPRETER ENFORCED CONTROL LAYER)
 
 ## PURPOSE
 
-Ensure safe and controlled execution of GPT-OS.
+Ensure safe, deterministic, and state-aware execution of GPT-OS.
 
-Governor defines constraints, not system modes.
+Governor enforces constraints across ALL system layers:
+- routing
+- execution
+- contracts
+- evolution
+
+Governor does NOT execute actions.
+Governor controls whether actions are allowed.
+
+---
+
+## BOOT REQUIREMENT (MANDATORY)
+
+Before ANY control decision:
+
+1. READ memory/source_of_truth.json via API
+2. PARSE state
+3. DETECT mode (DEBUG / CONTINUE / INIT)
+
+IF SOT read fails:
+→ STOP
+→ respond: ⚠ BRAK DANYCH
+
+---
+
+## MODE AWARE CONTROL
+
+System MUST respect mode:
+
+DEBUG:
+→ BLOCK non-debug actions
+→ FORCE debug_system
+
+CONTINUE:
+→ allow safe continuation
+
+INIT:
+→ allow normal execution
+
+Priority:
+SYSTEM STABILITY > DEBUG > EXECUTION > EVOLUTION
 
 ---
 
@@ -13,9 +53,33 @@ Governor defines constraints, not system modes.
 All actions MUST:
 
 - follow command_contract
-- use API only
+- use API only (via interpreter layer)
 - be deterministic
 - be minimal
+
+IF any rule violated:
+→ STOP
+
+---
+
+## INTERPRETER ENFORCEMENT (CRITICAL)
+
+ALL write operations MUST follow:
+
+GPT → RAW  
+↓  
+Python interpreter (normalize + validate + encode)  
+↓  
+API write  
+
+RULES:
+
+- GPT MUST NOT encode Base64
+- GPT MUST NOT call createOrUpdateFile directly
+- ONLY interpreter may prepare API payload
+
+Violation:
+→ STOP
 
 ---
 
@@ -23,21 +87,31 @@ All actions MUST:
 
 System MUST NOT:
 
-- perform destructive operations without explicit user intent
-- modify multiple files unnecessarily
-- overwrite unknown structures
-- delete critical files
+- perform destructive operations without explicit user intent  
+- modify multiple files unnecessarily  
+- overwrite unknown structures  
+- delete critical files  
+
+IF unsafe:
+→ STOP
 
 ---
 
-## WRITE VALIDATION
+## WRITE VALIDATION (EXTENDED)
 
-Before any write:
+Before ANY write:
 
 1. Verify file exists via API  
-2. Fetch SHA  
+2. FETCH fresh SHA  
 3. Ensure change is minimal  
 4. Ensure structure is preserved  
+5. ENSURE interpreter pipeline is used  
+
+RULES:
+
+- NEVER use cached SHA  
+- ALWAYS retry on conflict  
+- NEVER bypass interpreter  
 
 If any doubt:
 → STOP  
@@ -48,7 +122,7 @@ If any doubt:
 
 - MAX 3 files per operation  
 - MAX 1 workflow modification  
-- NEVER modify core prompt automatically  
+- NEVER modify prompt.md automatically  
 
 ---
 
@@ -62,38 +136,60 @@ Require explicit user intent:
 - large refactor (>3 files)  
 - branch operations  
 
----
-
-## FAILURE CONTROL
-
-If repeated failures detected:
-
-→ STOP evolution  
-→ MUST execute debug_system via command_contract or API  
+IF not explicit:
+→ STOP
 
 ---
 
-## PRIORITY ORDER
+## FAILURE CONTROL (SOT-BASED)
 
-1. SYSTEM STABILITY  
-2. DEBUG  
-3. EXECUTION  
-4. EVOLUTION  
+Read from SOT:
+
+- debug_runs
+- last_update
+
+IF debug_runs > 0:
+
+→ SYSTEM UNSTABLE  
+→ BLOCK execution  
+→ FORCE debug_system  
+
+NO further actions allowed until resolved.
 
 ---
 
-## AUDIT (OPTIONAL)
+## MEMORY CONTROL
 
-System MAY update memory/system_context.json only if necessary:
+Governor validates memory operations:
+
+Allowed:
+
+- memory/source_of_truth.json  
+- memory/debug/*  
+- memory/session/*  
+
+RULES:
+
+- MUST follow SAFE WRITE PROTOCOL  
+- MUST preserve structure  
+- MUST append state changes  
+
+---
+
+## AUDIT (OPTIONAL, SOT-BASED)
+
+System MAY update memory/source_of_truth.json:
 
 - last_action  
 - action_type  
 - status  
 
-NO mandatory logging.
+NO legacy system_context usage.
 
 ---
 
 ## FINAL RULE
 
-Safety > Execution > Evolution
+Governor = global safety layer
+
+Safety > State > Execution > Evolution
