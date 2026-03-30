@@ -1,0 +1,47 @@
+{
+  "version": "1.0",
+  "chunks": [
+    {
+      "id": "system_awareness.boot",
+      "source": "10_system_awareness.md",
+      "type": "core",
+      "desc": "SOT boot protocol",
+      "dependencies": ["SOT", "governor"]
+    },
+    {
+      "id": "governor.control",
+      "source": "07_governor.md",
+      "type": "control",
+      "desc": "execution validation",
+      "dependencies": ["SOT"]
+    },
+    {
+      "id": "roles.execution",
+      "source": "08_roles.md",
+      "type": "behavior",
+      "desc": "role based execution",
+      "dependencies": ["governor"]
+    },
+    {
+      "id": "execution.event",
+      "source": "03_execution.md",
+      "type": "execution",
+      "desc": "event driven execution",
+      "dependencies": ["interpreter"]
+    },
+    {
+      "id": "interpreter.layer",
+      "source": "pipeline",
+      "type": "safety",
+      "desc": "normalize + encode write",
+      "dependencies": []
+    },
+    {
+      "id": "routing.semantic",
+      "source": "11_semantic_routes.json",
+      "type": "intent",
+      "desc": "routing engine",
+      "dependencies": ["SOT", "governor"]
+    }
+  ]
+}
