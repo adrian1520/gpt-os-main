@@ -1,146 +1,118 @@
 {
-  "version": "3.1",
-
-  "routes": {
-
-    "check_logs": [
-      "logi",
-      "logs",
-      "error",
-      "błąd",
-      "błędy",
-      "co się wywaliło",
-      "co padło",
-      "co poszło nie tak",
-      "dlaczego nie działa",
-      "czemu nie działa",
-      "czemu padło",
-      "czemu build nie działa",
-      "sprawdź logi",
-      "sprawdź błędy",
-      "pokaż błędy",
-      "pokaż logi",
-      "what failed",
-      "why failed",
-      "why build failed",
-      "pipeline failed",
-      "build failed",
-      "show logs",
-      "show errors",
-      "get logs",
-      "error logs",
-      "failure logs",
-      "last run logs",
-      "latest logs",
-      "ostatnie logi"
+  "version": "4.0",
+  "routing_rules": {
+    "priority_order": [
+      "debug_system",
+      "check_logs",
+      "check_status",
+      "read_file",
+      "write_file",
+      "list_files",
+      "run_analysis"
     ],
-
-    "debug_system": [
-      "debug",
-      "napraw",
-      "napraw to",
-      "fix",
-      "fix system",
-      "napraw system",
-      "napraw to gówno",
-      "co jest nie tak",
-      "znajdź problem",
-      "rozwiąż problem",
-      "napraw błąd",
-      "fix error",
-      "repair",
-      "diagnose",
-      "troubleshoot",
-      "resolve issue",
-      "fix this",
-      "make it work"
-    ],
-
-    "check_status": [
-      "status",
-      "status run",
-      "status workflow",
-      "stan",
-      "co się dzieje",
-      "co teraz",
-      "co z pipeline",
-      "last run",
-      "ostatni run",
-      "pokaż run",
-      "show run",
-      "workflow status",
-      "pipeline status",
-      "czy działa",
-      "czy przeszło",
-      "czy build przeszedł",
-      "is it working",
-      "is build ok",
-      "build status"
-    ],
-
-    "read_file": [
-      "czytaj plik",
-      "read file",
-      "open file",
-      "pokaż plik",
-      "zawartość pliku",
-      "pokaż zawartość",
-      "show file",
-      "display file",
-      "get file",
-      "file content",
-      "co jest w pliku",
-      "odczytaj plik"
-    ],
-
-    "write_file": [
-      "zapisz plik",
-      "update file",
-      "edytuj plik",
-      "zmień plik",
-      "write file",
-      "modify file",
-      "create file",
-      "overwrite file",
-      "dodaj plik",
-      "stwórz plik",
-      "zaktualizuj plik",
-      "update this file"
-    ],
-
-    "list_files": [
-      "pliki",
-      "files",
-      "repo tree",
-      "lista plików",
-      "pokaż repo",
-      "pokaż pliki",
-      "co jest w repo",
-      "show repo",
-      "show files",
-      "list repo",
-      "repository structure",
-      "folder structure",
-      "tree",
-      "dir",
-      "ls"
-    ],
-
-    "run_analysis": [
-      "analizuj",
-      "run analysis",
-      "uruchom analizę",
-      "analyze",
-      "inspect",
-      "check system",
-      "scan repo",
-      "zrób analizę",
-      "sprawdź system",
-      "analyze repo",
-      "inspect repo"
-    ]
-
+    "mode_override": {
+      "DEBUG": "debug_system"
+    }
   },
-
-  "_fallback": "controller_mode"
+  "routes": {
+    "debug_system": {
+      "keywords": [
+        "debug",
+        "napraw",
+        "fix",
+        "repair",
+        "troubleshoot",
+        "resolve issue"
+      ],
+      "action": "debug_system",
+      "priority": 1,
+      "requires": [],
+      "blocked_in": []
+    },
+    "check_logs": {
+      "keywords": [
+        "logs",
+        "error",
+        "b\u0142\u0105d",
+        "co si\u0119 wywali\u0142o",
+        "show logs",
+        "failure logs"
+      ],
+      "action": "check_logs",
+      "priority": 2,
+      "requires": [],
+      "blocked_in": []
+    },
+    "check_status": {
+      "keywords": [
+        "status",
+        "run",
+        "pipeline status",
+        "czy dzia\u0142a",
+        "is it working"
+      ],
+      "action": "check_status",
+      "priority": 3,
+      "requires": [],
+      "blocked_in": []
+    },
+    "read_file": {
+      "keywords": [
+        "read file",
+        "czytaj plik",
+        "open file",
+        "file content"
+      ],
+      "action": "read_file",
+      "priority": 4,
+      "requires": [],
+      "blocked_in": []
+    },
+    "write_file": {
+      "keywords": [
+        "write file",
+        "zapisz plik",
+        "update file",
+        "create file"
+      ],
+      "action": "write_file",
+      "priority": 5,
+      "requires": [
+        "interpreter"
+      ],
+      "blocked_in": [
+        "DEBUG"
+      ]
+    },
+    "list_files": {
+      "keywords": [
+        "files",
+        "repo tree",
+        "list repo",
+        "ls"
+      ],
+      "action": "list_files",
+      "priority": 6,
+      "requires": [],
+      "blocked_in": []
+    },
+    "run_analysis": {
+      "keywords": [
+        "analyze",
+        "analysis",
+        "scan repo",
+        "inspect"
+      ],
+      "action": "run_analysis",
+      "priority": 7,
+      "requires": [],
+      "blocked_in": []
+    }
+  },
+  "governor_integration": true,
+  "interpreter_enforced": true,
+  "_fallback": {
+    "mode": "controller_mode",
+    "condition": "no_route_match"
+  }
 }
