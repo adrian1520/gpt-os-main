@@ -25,6 +25,9 @@ def extract_case_id(path):
     parts = path.split(os.sep)
     for i, p in enumerate(parts):
         if p.startswith("NSM_"):
+            # handle NSM_765/25 → NSM_765_25
+            if i + 1 < len(parts) and parts[i+1].isdigit():
+                return f"{p}_{parts[i+1]}"
             return p
     return "UNKNOWN"
 
