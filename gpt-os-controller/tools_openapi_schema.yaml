@@ -1,22 +1,84 @@
 openapi: 3.1.0
 info:
-  title: GPT-OS GitHub Controller API (v20 - Final Aligned)
-  version: 20.0.0
+  title: GPT-OS GitHub Controller API (v21 FINAL)
+  version: 21.0.0
   description: |
-    FINAL ALIGNED VERSION.
+    FINAL PRODUCTION SCHEMA.
 
     RULES:
     - MAX 30 ACTIONS
     - INTERPRETER ENFORCED
     - SOT AWARE
-    - GOVERNOR AWARE
+    - GOVERNOR ENFORCED
+
+    ALL operations MUST respect:
+    - SOT state
+    - governor validation
+    - interpreter layer for writes
 
 servers:
   - url: https://api.github.com
 
 paths:
 
+  /repos/{owner}/{repo}:
+    get:
+      operationId: getRepository
+      summary: Get repository metadata
+      parameters:
+        - name: owner
+          in: path
+          required: true
+          schema: { type: string }
+        - name: repo
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: OK }
+
+  /repos/{owner}/{repo}/contents:
+    get:
+      operationId: listRepositoryContents
+      summary: List repository contents
+      parameters:
+        - name: owner
+          in: path
+          required: true
+          schema: { type: string }
+        - name: repo
+          in: path
+          required: true
+          schema: { type: string }
+        - name: path
+          in: query
+          schema: { type: string }
+        - name: ref
+          in: query
+          schema: { type: string }
+      responses:
+        "200": { description: OK }
+
   /repos/{owner}/{repo}/contents/{path}:
+    get:
+      operationId: getFileContent
+      summary: Get file content
+      parameters:
+        - name: owner
+          in: path
+          required: true
+          schema: { type: string }
+        - name: repo
+          in: path
+          required: true
+          schema: { type: string }
+        - name: path
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: OK }
+
     put:
       operationId: createOrUpdateFile
       summary: Create or update file (INTERPRETER REQUIRED)
@@ -51,14 +113,30 @@ paths:
                     GPT MUST NOT encode.
                 sha:
                   type: string
-                  description: REQUIRED for update
       responses:
-        "200":
-          description: Updated
-        "201":
-          description: Created
+        "200": { description: Updated }
+        "201": { description: Created }
         "409":
           description: Conflict → MUST fetch fresh SHA and retry
+
+    delete:
+      operationId: deleteFile
+      summary: Delete file
+      parameters:
+        - name: owner
+          in: path
+          required: true
+          schema: { type: string }
+        - name: repo
+          in: path
+          required: true
+          schema: { type: string }
+        - name: path
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Deleted }
 
   /repos/{owner}/{repo}/dispatches:
     post:
@@ -90,20 +168,19 @@ paths:
                     - debug_system
                 client_payload:
                   type: object
-                  required: [target, content_raw]
                   properties:
                     target:
                       type: string
                     content_raw:
                       type: string
+                  additionalProperties: true
       responses:
-        "204":
-          description: Accepted
+        "204": { description: Accepted }
 
-  /repos/{owner}/{repo}/actions/runs:
+  /repos/{owner}/{repo}/actions/workflows:
     get:
-      operationId: listWorkflowRuns
-      summary: List runs
+      operationId: listWorkflows
+      summary: List workflows
       parameters:
         - name: owner
           in: path
@@ -114,8 +191,59 @@ paths:
           required: true
           schema: { type: string }
       responses:
-        "200":
-          description: OK
+        "200": { description: OK }
+
+  /repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches:
+    post:
+      operationId: triggerWorkflow
+      summary: Trigger workflow
+      parameters:
+        - name: owner
+          in: path
+          required: true
+        - name: repo
+          in: path
+          required: true
+        - name: workflow_id
+          in: path
+          required: true
+      requestBody:
+        required: true
+      responses:
+        "204": { description: Triggered }
+
+  /repos/{owner}/{repo}/actions/runs:
+    get:
+      operationId: listWorkflowRuns
+      summary: List workflow runs
+      parameters:
+        - name: owner
+          in: path
+          required: true
+          schema: { type: string }
+        - name: repo
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: OK }
+
+  /repos/{owner}/{repo}/actions/runs/{run_id}:
+    get:
+      operationId: getWorkflowRun
+      summary: Get workflow run
+      parameters:
+        - name: owner
+          in: path
+          required: true
+        - name: repo
+          in: path
+          required: true
+        - name: run_id
+          in: path
+          required: true
+      responses:
+        "200": { description: OK }
 
   /repos/{owner}/{repo}/actions/runs/{run_id}/jobs:
     get:
@@ -125,15 +253,113 @@ paths:
         - name: owner
           in: path
           required: true
-          schema: { type: string }
         - name: repo
           in: path
           required: true
-          schema: { type: string }
         - name: run_id
           in: path
           required: true
-          schema: { type: integer }
       responses:
-        "200":
-          description: OK
+        "200": { description: OK }
+
+  /repos/{owner}/{repo}/actions/runs/{run_id}/rerun:
+    post:
+      operationId: rerunWorkflowRun
+      summary: Rerun workflow
+      parameters:
+        - name: owner
+          in: path
+          required: true
+        - name: repo
+          in: path
+          required: true
+        - name: run_id
+          in: path
+          required: true
+      responses:
+        "201": { description: Rerun requested }
+
+  /repos/{owner}/{repo}/actions/runs/{run_id}/cancel:
+    post:
+      operationId: cancelWorkflowRun
+      summary: Cancel workflow
+      parameters:
+        - name: owner
+          in: path
+          required: true
+        - name: repo
+          in: path
+          required: true
+        - name: run_id
+          in: path
+          required: true
+      responses:
+        "202": { description: Cancel requested }
+
+  /repos/{owner}/{repo}/git/trees/{tree_sha}:
+    get:
+      operationId: getRepositoryTree
+      summary: Get repository tree
+      parameters:
+        - name: owner
+          in: path
+          required: true
+        - name: repo
+          in: path
+          required: true
+        - name: tree_sha
+          in: path
+          required: true
+      responses:
+        "200": { description: OK }
+
+  /repos/{owner}/{repo}/commits:
+    get:
+      operationId: listCommits
+      summary: List commits
+      parameters:
+        - name: owner
+          in: path
+          required: true
+        - name: repo
+          in: path
+          required: true
+      responses:
+        "200": { description: OK }
+
+  /repos/{owner}/{repo}/commits/{ref}:
+    get:
+      operationId: getCommit
+      summary: Get commit
+      parameters:
+        - name: owner
+          in: path
+          required: true
+        - name: repo
+          in: path
+          required: true
+        - name: ref
+          in: path
+          required: true
+      responses:
+        "200": { description: OK }
+
+  /repos/{owner}/{repo}/compare/{base}...{head}:
+    get:
+      operationId: compareCommits
+      summary: Compare commits
+      parameters:
+        - name: owner
+          in: path
+          required: true
+        - name: repo
+          in: path
+          required: true
+        - name: base
+          in: path
+          required: true
+        - name: head
+          in: path
+          required: true
+      responses:
+        "200": { description: OK }
