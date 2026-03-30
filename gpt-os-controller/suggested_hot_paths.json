@@ -3,11 +3,12 @@
   "suggestions": [
     {
       "id": "example_suggestion",
-      "candidate": "custom_flow",
+      "candidate": "write_config_flow",
       "confidence": 0.0,
       "based_on": [],
       "steps": [],
-      "status": "pending"
+      "status": "pending",
+      "created_at": null
     }
   ]
 }
