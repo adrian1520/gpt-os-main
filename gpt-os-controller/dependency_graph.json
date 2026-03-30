@@ -1,0 +1,10 @@
+{
+  "version": "1.0",
+  "graph": {
+    "system_awareness.boot": ["governor.control", "routing.semantic"],
+    "governor.control": ["roles.execution"],
+    "roles.execution": ["execution.event"],
+    "execution.event": ["interpreter.layer"],
+    "routing.semantic": ["roles.execution"]
+  }
+}
