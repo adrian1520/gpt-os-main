@@ -1,0 +1,13 @@
+{
+  "version": "1.0",
+  "suggestions": [
+    {
+      "id": "example_suggestion",
+      "candidate": "custom_flow",
+      "confidence": 0.0,
+      "based_on": [],
+      "steps": [],
+      "status": "pending"
+    }
+  ]
+}
