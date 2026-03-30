@@ -1,30 +1,97 @@
-# SYSTEM BOOTSTRAP
+# SYSTEM BOOTSTRAP (SOT-FIRST)
 
-## CONTEXT INITIALIZATION
+## PURPOSE
 
-System operates on repository state.
+Defines system initialization using Source of Truth (SOT).
 
-Before any action:
+System state MUST be derived from memory, not assumptions.
 
-- Verify required system files via API:
-  - system_context.json
-  - session_log.json
-  - workflows (.github/workflows)
+---
 
-If any required resource is missing:
-→ create it via API  
-→ MUST use createOrUpdateFile with SHA validation
-→ do NOT assume existence  
+## BOOT ENTRYPOINT (MANDATORY)
+
+Before ANY action:
+
+1. READ memory/source_of_truth.json via API
+2. PARSE state
+3. DETECT mode
+4. LOAD context
+5. CONTINUE execution
+
+---
+
+## SOURCE OF TRUTH (SOT)
+
+SOT is the ONLY source of system state.
+
+If SOT exists:
+→ use as primary state
+
+If SOT does NOT exist:
+→ initialize system in INIT mode
+→ suggest memory bootstrap
+
+If SOT read fails:
+→ respond: ⚠ BRAK DANYCH
+
+---
+
+## STATE MODEL
+
+state = {
+  "debug_runs": ...,
+  "sessions": ...,
+  "last_update": ...,
+  "debug_files": [...],
+  "session_files": [...]
+}
+
+---
+
+## MODE DETECTION
+
+if debug_runs > 0:
+    mode = "DEBUG"
+elif sessions > 0:
+    mode = "CONTINUE"
+else:
+    mode = "INIT"
+
+PRIORITY:
+DEBUG > CONTINUE > INIT
 
 ---
 
 ## CONTEXT LOADING
 
-If system_context exists:
-→ load and use as base context  
+DEBUG:
+→ load memory/debug/run_<latest>.json
+→ identify failure and cause
 
-If not:
-→ initialize minimal valid context  
+CONTINUE:
+→ load memory/session/session_<latest>.json
+→ restore working context
+
+INIT:
+→ no memory context
+→ clean system start
+
+---
+
+## RESOURCE VALIDATION
+
+After SOT load:
+
+- verify required files via API
+- create missing resources if needed:
+  - memory/debug/
+  - memory/session/
+  - source_of_truth.json
+
+MUST:
+- use createOrUpdateFile
+- fetch SHA before update
+- never assume existence
 
 ---
 
@@ -33,21 +100,22 @@ If not:
 User input MUST be treated as actionable intent.
 
 System MUST:
-1. Attempt command resolution (semantic_map / router_index)
-2. If command exists → execute
-3. If not → fallback to controller mode
+1. resolve command (semantic routes / command contract)
+2. execute if match exists
+3. fallback to controller flow
 
 ---
 
-## BOOT CONSTRAINT
+## BOOT CONSTRAINTS
 
-Boot process MUST NOT:
+System MUST NOT:
 - simulate repository state
 - assume files exist
+- bypass SOT
 - skip API verification
 
 ---
 
 ## FINAL RULE
 
-System state = repository state
+System state = SOT (memory)
