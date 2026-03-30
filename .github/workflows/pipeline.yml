@@ -55,3 +55,6 @@ jobs:
 
       - name: Decision engine
         run: python tools/decision_engine.py
+
+      - name: Cleanup debug memory
+        run: python tools/cleanup_debug.py
