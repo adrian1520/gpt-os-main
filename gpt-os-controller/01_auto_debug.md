@@ -1,12 +1,35 @@
-# AUTO DEBUG SYSTEM (SELF-HEALING)
+# AUTO DEBUG SYSTEM (SOT-AWARE, SELF-HEALING)
 
 ## PURPOSE
 
-Enable GPT-OS to detect, analyze, and fix system errors deterministically.
+Enable GPT-OS to detect, analyze, and fix system errors deterministically with full memory awareness.
 
 System does NOT run loops.
-
 Each debug execution is a single cycle.
+
+---
+
+## BOOT REQUIREMENT (MANDATORY)
+
+Before debug:
+
+1. READ memory/source_of_truth.json via API
+2. PARSE state
+3. DETECT mode
+
+IF SOT read fails:
+→ STOP
+→ respond: ⚠ BRAK DANYCH
+
+---
+
+## MODE PRIORITY
+
+IF mode == DEBUG:
+→ debug_system has PRIORITY
+
+Priority:
+DEBUG > CONTINUE > INIT
 
 ---
 
@@ -30,10 +53,9 @@ listWorkflowRuns
 → extract workflow_runs[0].conclusion  
 
 → if conclusion != "failure":
-   → STOP (no failure) 
+   → STOP  
 
 ---
-- 
 
 ### 2. GET EXECUTION DATA
 
@@ -46,7 +68,7 @@ params:
 → extract jobs  
 → select job where conclusion == "failure"  
 → if none:
-   → STOP (no failure detected)  
+   → STOP  
 
 → extract steps from job.steps
 
@@ -54,16 +76,10 @@ params:
 
 ### 3. ANALYZE ERROR (DETERMINISTIC)
 
-Use transform:
+Input: steps  
+Output: error_type  
 
-Input:
-steps
-
-Output:
-error_type
-
-Allowed types:
-
+Allowed:
 - YAML_ERROR  
 - PYTHON_ERROR  
 - PATH_ERROR  
@@ -75,9 +91,7 @@ NO free reasoning.
 
 ---
 
-### 4. FIX STRATEGY (MAPPED)
-
-Error must map to fix:
+### 4. FIX STRATEGY
 
 YAML_ERROR:
 - fix indentation
@@ -90,7 +104,7 @@ PYTHON_ERROR:
 - fix paths
 
 PATH_ERROR:
-- correct file paths
+- correct paths
 
 MISSING_FILE:
 - create required file
@@ -99,65 +113,72 @@ SYNTAX_ERROR:
 - fix syntax
 
 UNKNOWN_ERROR:
-→ STOP (no unsafe fix)
+→ STOP
 
 ---
 
-### 5. APPLY FIX
-
-API:
-createOrUpdateFile
+### 5. APPLY FIX (INTERPRETER LAYER)
 
 RULES:
-- ALWAYS fetch SHA first  
-- ALWAYS encode Base64  
-- ALWAYS minimal patch  
+- NO direct Base64
+- USE Python (prepare_content.py)
+- ALWAYS fetch SHA before write
+- ALWAYS minimal patch
+
+FLOW:
+
+RAW → Python normalize → encode → API write
 
 ---
 
-### 6. REDEPLOY
+### 6. MEMORY WRITE-BACK (MANDATORY)
+
+After fix attempt:
+
+- create memory/debug/run_<id>.json
+- include:
+  - run_id
+  - error_type
+  - affected_files
+  - status
+
+- update memory/source_of_truth.json:
+  - increment debug_runs
+  - append debug_files
+
+---
+
+### 7. REDEPLOY
 
 API:
-rerunWorkflowRun  
-or  
-repositoryDispatch  
+rerunWorkflowRun
+or repositoryDispatch
 
 ---
 
-### 7. VERIFY
+### 8. VERIFY
 
 API:
 listWorkflowRuns
 
-→ check latest conclusion  
-
 IF success:
-→ STOP  
+→ STOP
 
 IF failure:
-→ require new debug execution (no loop)  
+→ require new debug execution
 
 ---
 
 ## SAFETY RULES
 
 - NO loops  
-- NO automatic retries  
-- NO full file overwrite unless required  
+- NO retries inside GPT  
+- NO full overwrite unless required  
 - PRESERVE structure  
 - DO NOT delete critical files  
 
 ---
 
-## PRIORITY
-
-If failure detected:
-
-→ debug_system has HIGH priority  
-→ but does NOT override explicit user commands  
-
----
-
 ## FINAL RULE
 
-System is self-healing via repeated executions, not loops.
+System is self-healing via stateful iterations (memory), not loops.
