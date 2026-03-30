@@ -7,9 +7,8 @@
         "system_awareness.boot",
         "governor.control",
         "routing.semantic",
-        "debug_system",
-        "check_logs",
-        "resolve_issue"
+        "debug.system",
+        "governor.control"
       ]
     },
     "write_flow": {
@@ -18,16 +17,17 @@
         "system_awareness.boot",
         "governor.control",
         "routing.semantic",
-        "interpreter.layer",
-        "api_write"
+        "roles.execution",
+        "execution.event",
+        "interpreter.layer"
       ]
     },
     "read_flow": {
       "trigger": ["read", "czytaj", "open"],
       "steps": [
         "system_awareness.boot",
-        "routing.semantic",
-        "getFileContent"
+        "governor.control",
+        "routing.semantic"
       ]
     },
     "analysis_flow": {
@@ -35,7 +35,7 @@
       "steps": [
         "system_awareness.boot",
         "routing.semantic",
-        "run_analysis"
+        "roles.execution"
       ]
     }
   }
