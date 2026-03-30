@@ -1,48 +1,91 @@
-## API ACCESS
+# COMMAND MAPPING (SOT-FIRST, INTERPRETER COMPLIANT)
 
-System has access to ALL endpoints defined in OpenAPI schema.
+## PURPOSE
 
-GPT MAY use any endpoint when required,
-even if not explicitly listed in this mapping.
+Defines deterministic routing between user intent, command_contract, and API execution with full SOT awareness.
 
-# COMMAND + API MAPPING
+---
+
+## BOOT REQUIREMENT (MANDATORY)
+
+Before ANY command resolution:
+
+1. READ memory/source_of_truth.json via API
+2. PARSE state
+3. DETECT mode (DEBUG / CONTINUE / INIT)
+
+IF SOT read fails:
+→ STOP
+→ respond: ⚠ BRAK DANYCH
+
+---
 
 ## EXECUTION RULE
 
 All commands MUST map to:
-- command_contract
-- or direct API call
+- command_contract (preferred)
+- or direct API call (only if safe and deterministic)
 
 DO NOT interpret commands manually.
 
 ---
 
-## MEMORY OPERATIONS
+## MODE-AWARE ROUTING
 
-### READ MEMORY
+System MUST respect mode:
 
-Command:
-read_memory
+DEBUG:
+→ prioritize debug_system
 
-API:
-getFileContent
+CONTINUE:
+→ resume last session context
 
-Paths:
-- memory/system_context.json
-- memory/session_log.json
+INIT:
+→ normal routing
+
+Priority:
+DEBUG > CONTINUE > INIT
 
 ---
 
-### LOAD CONTEXT
+## MEMORY OPERATIONS (SOT-FIRST)
+
+### READ SOT
 
 Command:
-load_context
+read_sot
 
 API:
 getFileContent
 
 Path:
-memory/context_bundle.json
+memory/source_of_truth.json
+
+---
+
+### READ DEBUG
+
+Command:
+read_debug
+
+API:
+getFileContent
+
+Path:
+memory/debug/run_<latest>.json
+
+---
+
+### READ SESSION
+
+Command:
+read_session
+
+API:
+getFileContent
+
+Path:
+memory/session/session_<latest>.json
 
 ---
 
@@ -51,11 +94,17 @@ memory/context_bundle.json
 Command:
 update_memory
 
-API:
-createOrUpdateFile
+FLOW:
+RAW → Python interpreter → API write
 
-Path:
-memory/*
+Paths:
+- memory/source_of_truth.json
+- memory/debug/*
+- memory/session/*
+
+RULES:
+- MUST follow SAFE WRITE PROTOCOL
+- MUST append, not overwrite (unless required)
 
 ---
 
@@ -66,14 +115,13 @@ memory/*
 Command:
 save_project
 
-Required steps:
-- read memory files
-- construct snapshot (deterministic)
-- write to memory/projects/<name>.json
+FLOW:
+- read SOT + memory
+- construct deterministic snapshot
+- write via interpreter layer
 
-API:
-- getFileContent
-- createOrUpdateFile
+Path:
+memory/projects/<name>.json
 
 ---
 
@@ -82,13 +130,9 @@ API:
 Command:
 load_project
 
-Required steps:
+FLOW:
 - read project file
-- overwrite memory files
-
-API:
-- getFileContent
-- createOrUpdateFile
+- update memory via interpreter
 
 ---
 
@@ -120,21 +164,20 @@ run_analysis
 
 ---
 
-### DEBUG SYSTEM
+## DEBUG SYSTEM
 
 Command:
 debug_system
 
-Flow:
-1. listWorkflowRuns
-2. listJobsForWorkflowRun
-3. delegate to command_contract (debug_system)
-4. apply fix via contract execution
-5. createOrUpdateFile
+FLOW:
+- delegate to command_contract (debug_system)
+- execution handled via interpreter + memory write-back
+
+NO manual debug logic in mapping layer.
 
 ---
 
-## FILE OPERATIONS
+## FILE OPERATIONS (INTERPRETER ONLY)
 
 ### READ FILE
 
@@ -151,8 +194,12 @@ getFileContent
 Command:
 write_file
 
-API:
-createOrUpdateFile
+FLOW:
+RAW → Python interpreter → API write
+
+RULES:
+- NO direct createOrUpdateFile from GPT
+- MUST use interpreter layer
 
 ---
 
@@ -171,10 +218,13 @@ deleteFile
 Command:
 check_status
 
-Flow:
-- listWorkflowRuns
-- extract latest run
-- return status
+FLOW:
+- read SOT
+- optionally verify via listWorkflowRuns
+
+RETURN:
+- system state
+- last execution status
 
 ---
 
@@ -183,6 +233,13 @@ Flow:
 - ALWAYS use exact path
 - ALWAYS use API
 - ALWAYS validate before write
+- ALWAYS use interpreter for writes
 - NEVER simulate
 - ALWAYS follow command_contract
 - STOP after execution
+
+---
+
+## FINAL RULE
+
+Routing MUST be deterministic, state-aware, and interpreter-compliant.
