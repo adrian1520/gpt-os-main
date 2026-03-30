@@ -15,13 +15,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Handle dynamic event
+      - name: Handle dynamic event (RAW → interpreter)
         run: |
           if [ -f events/write_execution.json ]; then
             target=$(jq -r '.target' events/write_execution.json)
-            content=$(jq -r '.content // ""' events/write_execution.json)
+            content=$(jq -r '.content_raw // ""' events/write_execution.json)
 
             mkdir -p $(dirname "$target")
+
             printf "%s" "$content" > input.txt
 
             python tools/prepare_content.py input.txt encoded.txt
@@ -41,7 +42,7 @@ jobs:
         run: |
           printf '{"tree":[' > tree.json
           git ls-files | while read f; do
-            printf '{"path":"%s"' "$f" >> tree.json
+            printf '{"path":"%s"},' "$f" >> tree.json
           done
           sed -i '$ s/,$//' tree.json
           printf ']}' >> tree.json
