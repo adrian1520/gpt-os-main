@@ -1,0 +1,6 @@
+{
+  "status": "failure",
+  "timestamp": 1774910442,
+  "error": "[Errno 2] No such file or directory: ''",
+  "traceback": "Traceback (most recent call last):\n  File \"/home/runner/work/gpt-os-main/gpt-os-main/tools/run_pipeline.py\", line 20, in main\n    process_file(file_path)\n  File \"/home/runner/work/gpt-os-main/gpt-os-main/tools/process_case.py\", line 50, in process_file\n    doc = load_document(file_path)\n          ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/gpt-os-main/gpt-os-main/tools/process_case.py\", line 19, in load_document\n    with open(path, \"r\", encoding=\"utf-8\") as f:\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nFileNotFoundError: [Errno 2] No such file or directory: ''\n"
+}
