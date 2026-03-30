@@ -15,7 +15,6 @@ NOT:
 session_logs
 debug_logs
 hot_paths
-
 chunk_index
 
 ---
@@ -23,25 +22,31 @@ chunk_index
 ## STEP 1 - PATTERN CAPTURE
 
 Track execution paths:
-- steps sequence
+- steps sequence (must match chunk_index IDs)
 - frequency
 - context
+
+IGNORE failed debug runs.
 
 ---
 
 ## STEP 2 - FREQUENCY ANALYSIS
 
-If pattern.count > threshold:
+threshold:
+- min_count: 3
+- min_confidence: 0.7
+
+If pattern.count >= min_count:
     mark as candidate
 
 ---
 
 ## STEP 3 - CONFIDENCE SCORE
 
-confidence = ¢
+confidence =
   (count / total_runs) *
   (step_stability) *
-  (error_rate_inverse)
+  (1 - error_rate)
 
 ---
 
@@ -55,19 +60,19 @@ suggested_hot_paths.json entry
 ## STEP 5 - GPT INTERACTION
 
 GPT:
- "This pattern appeared N4 times. Add as hot_path?"
+"This pattern appeared N times. Add as hot_path?"
 
 ---
 
 ## RULES
 
-- NEVE auto-apply
-- NEVE modify system files directly
+- NEVER auto-apply
+- NEVER modify system files directly
 - ALWAYS require user confirmation
 
 ---
 
 ## FINAL
 
-LEARNING = OBSRVERVATION + SUGGESTION
-NOT AUTONOMOU EVOLUTION
+LEARNING = OBSERVATION + SUGGESTION  
+NOT AUTONOMOUS EVOLUTION
