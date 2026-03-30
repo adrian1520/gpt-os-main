@@ -1,24 +1,50 @@
-# ASYNC DISPATCH MODE (FORMERLY PARALLEL EXECUTION)
+# ASYNC DISPATCH MODE (SOT + GOVERNOR + INTERPRETER ENFORCED)
 
 ## PURPOSE
 
 Enable GPT-OS to handle asynchronous task execution via repository-driven workflows.
 
-GPT does NOT manage parallel execution.
+GPT DOES NOT execute tasks.
+GitHub Actions execute tasks.
 
-Parallelism is handled by GitHub Actions.
+---
+
+## SOT INTEGRATION (MANDATORY)
+
+Before dispatch:
+
+- MUST read SOT
+- MUST detect mode
+
+RULE:
+
+IF mode == DEBUG:
+→ DO NOT dispatch new tasks
+→ PRIORITIZE debug_system
+
+---
+
+## GOVERNOR ENFORCEMENT
+
+ALL dispatch operations MUST pass through governor.
+
+Governor may:
+- block dispatch
+- delay dispatch
+- limit task count
+
+IF blocked:
+→ STOP
 
 ---
 
 ## CORE PRINCIPLE
 
 GPT:
-
-- creates tasks
+- creates tasks (RAW only)
 - triggers execution
 
 GitHub Actions:
-
 - process tasks
 - handle parallel execution
 - manage concurrency
@@ -27,15 +53,37 @@ GitHub Actions:
 
 ## TASK DISPATCH
 
-Tasks MAY be written to:
+Tasks MUST be written to:
 
 memory/queue/
 
 Using API:
 createOrUpdateFile
 
+---
+
+## TASK FORMAT (CRITICAL)
+
+Tasks MUST contain RAW content only.
+
+FORBIDDEN:
+- base64 encoding by GPT
+- formatted payloads
+
+Encoding:
+→ handled by interpreter layer in workflow
+
+---
+
+## TASK ID
+
+task_id MUST include:
+- timestamp
+- session_id
+- operation type
+
 Example:
-memory/queue/task_<id>.json
+task_20260330_write_config.json
 
 ---
 
@@ -45,25 +93,31 @@ API:
 repositoryDispatch
 
 event_type:
-process_queue
+- process_queue
 
 ---
 
 ## WORKFLOW RESPONSIBILITY
 
 GitHub Actions MUST:
-
 - read queue
 - process tasks
 - manage parallel execution
 - handle locking
 - avoid conflicts
+- use interpreter layer for writes
 
 GPT is NOT responsible for:
-
 - locking
 - concurrency
 - worker coordination
+
+---
+
+## LIMITS (ENFORCED)
+
+MAX:
+- tasks per cycle: 5
 
 ---
 
@@ -73,7 +127,7 @@ Results stored in:
 
 memory/results/
 
-GPT MAY read results using:
+GPT MAY read using:
 getFileContent
 
 ---
@@ -82,30 +136,12 @@ getFileContent
 
 If task fails:
 
-→ mark as failed  
-→ MUST execute debug_system via command_contract or API  
-
----
-
-## GOVERNOR CONSTRAINTS
-
-- avoid conflicting writes  
-- prefer sequential updates when modifying same files  
-- do not dispatch excessive tasks  
-
----
-
-## ROLE IN SYSTEM
-
-This module defines dispatch strategy, not execution logic.
-
-Execution logic remains in:
-- command_contract
-- workflows
+→ mark as failed
+→ MUST execute debug_system
 
 ---
 
 ## FINAL RULE
 
-GPT dispatches.  
+GPT dispatches.
 Workflows execute.
