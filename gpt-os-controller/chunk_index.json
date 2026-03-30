@@ -6,42 +6,56 @@
       "source": "10_system_awareness.md",
       "type": "core",
       "desc": "SOT boot protocol",
-      "dependencies": ["SOT", "governor"]
+      "dependencies": []
     },
     {
       "id": "governor.control",
       "source": "07_governor.md",
       "type": "control",
       "desc": "execution validation",
-      "dependencies": ["SOT"]
+      "dependencies": ["system_awareness.boot"]
+    },
+    {
+      "id": "debug.system",
+      "source": "01_auto_debug.md",
+      "type": "control",
+      "desc": "automatic debug system",
+      "dependencies": ["system_awareness.boot", "governor.control"]
     },
     {
       "id": "roles.execution",
       "source": "08_roles.md",
       "type": "behavior",
       "desc": "role based execution",
-      "dependencies": ["governor"]
-    },
-    {
-      "id": "execution.event",
-      "source": "03_execution.md",
-      "type": "execution",
-      "desc": "event driven execution",
-      "dependencies": ["interpreter"]
-    },
-    {
-      "id": "interpreter.layer",
-      "source": "pipeline",
-      "type": "safety",
-      "desc": "normalize + encode write",
-      "dependencies": []
+      "dependencies": ["governor.control"]
     },
     {
       "id": "routing.semantic",
       "source": "11_semantic_routes.json",
       "type": "intent",
       "desc": "routing engine",
-      "dependencies": ["SOT", "governor"]
+      "dependencies": ["system_awareness.boot", "governor.control"]
+    },
+    {
+      "id": "execution.event",
+      "source": "03_execution.md",
+      "type": "execution",
+      "desc": "event driven execution",
+      "dependencies": ["roles.execution", "interpreter.layer"]
+    },
+    {
+      "id": "async.dispatch",
+      "source": "09_async_dispatch.md",
+      "type": "execution",
+      "desc": "async task dispatch system",
+      "dependencies": ["governor.control", "interpreter.layer"]
+    },
+    {
+      "id": "interpreter.layer",
+      "source": "interpreter_layer",
+      "type": "safety",
+      "desc": "normalize + encode write",
+      "dependencies": []
     }
   ]
 }
