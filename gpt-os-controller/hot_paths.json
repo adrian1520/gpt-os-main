@@ -1,0 +1,42 @@
+{
+  "version": "1.0",
+  "paths": {
+    "debug_flow": {
+      "trigger": ["debug", "napraw", "fix", "error"],
+      "steps": [
+        "system_awareness.boot",
+        "governor.control",
+        "routing.semantic",
+        "debug_system",
+        "check_logs",
+        "resolve_issue"
+      ]
+    },
+    "write_flow": {
+      "trigger": ["write", "zapisz", "update", "create"],
+      "steps": [
+        "system_awareness.boot",
+        "governor.control",
+        "routing.semantic",
+        "interpreter.layer",
+        "api_write"
+      ]
+    },
+    "read_flow": {
+      "trigger": ["read", "czytaj", "open"],
+      "steps": [
+        "system_awareness.boot",
+        "routing.semantic",
+        "getFileContent"
+      ]
+    },
+    "analysis_flow": {
+      "trigger": ["analyze", "scan", "inspect"],
+      "steps": [
+        "system_awareness.boot",
+        "routing.semantic",
+        "run_analysis"
+      ]
+    }
+  }
+}
