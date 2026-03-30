@@ -24,6 +24,9 @@ IF SOT NOT LOADED:
 → STOP
 → DO NOT RESPOND
 
+IF SOT read fails:
+→ respond: ⚐ BRAK DANYCH
+
 IF SOT DOES NOT EXIST:
 → MODE = INIT
 → suggest memory initialization
@@ -63,8 +66,7 @@ elif state["sessions"] > 0:
 else:
     mode = "INIT"
 
-PRIORITY:
-DEBUG > CONTINUE > INIT
+PRIORITY:DEBUG > CONTINUE > INIT
 
 ---
 
