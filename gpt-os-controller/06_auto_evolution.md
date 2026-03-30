@@ -1,8 +1,8 @@
-# AUTO EVOLUTION SYSTEM (CONTROLLED CHANGE)
+# AUTO EVOLUTION SYSTEM (SOT-FIRST, INTERPRETER COMPLIANT)
 
 ## PURPOSE
 
-Enable GPT-OS to improve and extend system safely via controlled changes.
+Enable GPT-OS to improve and extend system safely via controlled, state-aware changes.
 
 System does NOT evolve automatically.
 
@@ -10,11 +10,35 @@ Evolution is always single-cycle and user-triggered.
 
 ---
 
+## BOOT REQUIREMENT (MANDATORY)
+
+Before ANY evolution:
+
+1. READ memory/source_of_truth.json via API
+2. PARSE state
+3. DETECT mode (DEBUG / CONTINUE / INIT)
+
+IF SOT read fails:
+→ STOP
+→ respond: ⚠ BRAK DANYCH
+
+---
+
+## MODE PRIORITY
+
+DEBUG > CONTINUE > INIT
+
+IF mode == DEBUG:
+→ MUST execute debug_system first
+→ evolution blocked until system is stable
+
+---
+
 ## TRIGGERS
 
 - user: "ulepsz system"
 - user: "rozwiń system"
-- explicit request for system improvement
+- explicit system improvement request
 
 ---
 
@@ -24,24 +48,28 @@ Evolution is always single-cycle and user-triggered.
 
 Read ONLY required files via API:
 
-- system_context.json
-- relevant workflows
-- specific module (if defined)
+- memory/source_of_truth.json
+- relevant module(s)
+- related workflows (if needed)
 
-NO full system scan.
+NO blind full-repo scan.
 
 ---
 
 ### 2. DEFINE CHANGE
 
-Improvement must be explicit and minimal.
+Improvement MUST be:
+
+- explicit
+- minimal
+- deterministic
 
 Allowed:
 
-- fix bug
-- optimize workflow
-- extend capability
-- refactor structure
+- FIX → bug repair  
+- OPTIMIZE → performance improvement  
+- EXTEND → new capability  
+- REFACTOR → structure cleanup  
 
 ---
 
@@ -57,28 +85,55 @@ NO abstract planning.
 
 ---
 
-### 4. APPLY CHANGE
+### 4. APPLY CHANGE (INTERPRETER LAYER)
 
-API:
-createOrUpdateFile
+FLOW:
+
+RAW → Python interpreter → API write
 
 RULES:
-- ALWAYS fetch SHA first  
-- ALWAYS encode Base64  
-- ALWAYS minimal diff  
+
+- NO direct Base64 encoding
+- MUST use interpreter (prepare_content.py)
+- ALWAYS fetch fresh SHA
+- ALWAYS minimal diff
 
 ---
 
-### 5. DEPLOY
+### 5. MEMORY UPDATE (MANDATORY)
+
+After change:
+
+Update memory/source_of_truth.json:
+
+- last_update
+- last_evolution
+- change_summary
+
+OPTIONAL:
+
+- write session log → memory/session/
+- write debug info → memory/debug/ (if needed)
+
+RULES:
+
+- append, not overwrite
+- preserve structure
+- deterministic updates
+
+---
+
+### 6. DEPLOY
 
 API:
-repositoryDispatch  
+
+- repositoryDispatch  
 or  
-triggerWorkflow  
+- workflow trigger  
 
 ---
 
-### 6. VERIFY
+### 7. VERIFY
 
 API:
 listWorkflowRuns  
@@ -89,51 +144,35 @@ Check:
 - system stability  
 
 IF failure:
+
 → STOP  
-→ MUST execute debug_system via command_contract or API  
+→ MUST execute debug_system  
 
 ---
 
 ## SAFETY RULES
 
 - MAX 3 files per evolution  
-- NEVER modify core prompt automatically  
+- NEVER modify prompt.md automatically  
 - NEVER delete system-critical files  
-- ALWAYS preserve system bootability  
+- ALWAYS preserve bootability  
+- ALWAYS follow SAFE WRITE PROTOCOL  
 
 ---
 
-## EVOLUTION TYPES
+## EXECUTION RULE
 
-- FIX → bug repair  
-- OPTIMIZE → performance improvement  
-- EXTEND → new capability  
-- REFACTOR → structure cleanup  
+Evolution MUST:
 
----
+- use command_contract if available
+- otherwise use deterministic API execution
 
-## PRIORITY
-
-Evolution is always secondary.
-
-If failure detected:
-→ MUST run debug_system first  
-
----
-
-## MEMORY UPDATE (CONTROLLED)
-
-Optional:
-
-Update system_context.json ONLY if needed:
-
-- last_evolution
-- change_summary
-
-NO automatic memory mutation.
+NO manual unsafe operations.
 
 ---
 
 ## FINAL RULE
 
-Evolution is controlled mutation, not autonomous behavior.
+Evolution = controlled, state-aware mutation
+
+NOT autonomous behavior.
