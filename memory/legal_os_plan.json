@@ -1,27 +1,17 @@
 {
   "project": "Legal OS",
-  "purpose": "Cyfrowe akta sprawy, archiwum, przetwarzanie dokumentów oraz generacja dashboardu JSON dl innych GPT's",
-  "core_concept": "Repo = archiwum sprawy, SOT = indeks spraw, GPT = operator systemu",
-  "architecture": {
-    "case_storage": "/cases/<sygnatura>/",
-    "documents": "documents/",
-    "extracted": "extracted/",
-    "dashboard": "/dashboard/"
+  "status": "expanded",
+  "progress": {
+    "cases_structure": "pending",
+    "parser": "pending",
+    "dashboard": "pending",
+    "sot_integration": "pending"
   },
-  "pipeline": [
-    "URLOAD",
-    "PARSE",
-    "CLASSIFY",
-    "ROUTE",
-    "WRITE",
-    "EXTRACT",
-    "UPDATE_SOT"
+  "roadmap": [
+    "cases model",
+    "document ingestion",
+    "extraction engine",
+    "dashboard engine"
   ],
-  "key_rules": [
-    "Sygnatura must exist",
-    "Brak sygnatury = reject",
-    "Nowe sprawy = tworzenie folderu"
-  ],
-  "status": "init",
   "last_update": "2026-04-01"
 }
