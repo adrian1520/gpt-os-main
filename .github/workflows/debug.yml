@@ -3,7 +3,10 @@ name: GPT-OS Debug
 on:
   push:
     paths:
-      - 'events/debug/**'\
+      - 'events/debug/**'
+
+  permissions:
+    contents: write
 
 jobs:
   debug:
@@ -12,6 +15,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Auto debug
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run debug engine
         run: |
           python tools/decision_engine.py
+
+      - name: Rebuild SOT
+        run: |
+          python tools/build_sot.py
+
+      - name: Commit SOT
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "auto debug + sot sync [skip ci]" || echo "no changes"
+          git push
