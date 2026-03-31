@@ -3,7 +3,6 @@
 import sys
 import os
 
-# FIX: ensure repo root is in PYTHONPATH
 sys.path.append(os.getcwd())
 
 import json
@@ -16,6 +15,12 @@ from tools.process_case import process_file
 def main(file_path):
     ts = int(time.time())
 
+    os.makedirs("memory/debug", exist_ok=True)
+    debug_path = f"memory/debug/run_{ts}.json"
+
+    with open(debug_path, "w", encoding="utf-8") as f:
+        json.dump({"status": "started", "timestamp": ts}, f)
+
     try:
         process_file(file_path)
 
@@ -24,7 +29,7 @@ def main(file_path):
             "timestamp": ts
         }
 
-    except Exception as e:
+    except BaseException as e:
         log = {
             "status": "failure",
             "timestamp": ts,
@@ -32,10 +37,10 @@ def main(file_path):
             "traceback": traceback.format_exc()
         }
 
-    os.makedirs("memory/debug", exist_ok=True)
-
-    with open(f"memory/debug/run_{ts}.json", "w", encoding="utf-8") as f:
+    with open(debug_path, "w", encoding="utf-8") as f:
         json.dump(log, f, ensure_ascii=False, indent=2)
+        f.flush()
+        os.fsync(f.fileno())
 
 
 if __name__ == "__main__":
