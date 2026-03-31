@@ -39,12 +39,31 @@ jobs:
 
       - name: Run pipeline engine
         run: |
-          echo "Running run_pipeline..."
           python tools/run_pipeline.py "${{ steps.detect.outputs.file }}"
+
+      - name: Archive case
+        run: |
+          python - <<EOF
+import os
+from modules.archive.archive_manager import archive_case
+
+path = "${{ steps.detect.outputs.file }}"
+parts = path.split("/")
+case_id = None
+
+for i,p in enumerate(parts):
+    if p.startswith("NSM_"):
+        if i+1 < len(parts):
+            case_id = f"{p}_{parts[i+1]}"
+        else:
+            case_id = p
+
+if case_id:
+    archive_case(case_id, source_file=path)
+EOF
 
       - name: Update SOT
         run: |
-          echo "Updating SOT..."
           python tools/build_sot.py
 
       - name: Commit artifacts
@@ -52,5 +71,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add .
-          git commit -m "auto process case + update sot [skip ci]" || echo "no changes"
+          git commit -m "auto process case + archive + sot [skip ci]" || echo "no changes"
           git push
