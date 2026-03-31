@@ -1,0 +1,15 @@
+{
+  "version": "v1",
+  "last_update": "2026-04-01",
+  "cases_index": {},
+  "stats": {
+    "total_cases": 0,
+    "active_cases": 0,
+    "archived_cases": 0
+  },
+  "rules": {
+    "signature_format": "NSM_1234_56",
+    "require_signature": true,
+    "default_status": "active"
+  }
+}
