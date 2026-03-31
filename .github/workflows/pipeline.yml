@@ -3,7 +3,11 @@ name: GPT-OS Core Pipeline
 on:
   push:
     paths:
-      - 'cases/**/input/**'
+      - 'cases/**'
+      - 'memory/**'
+      - 'scripts/**'
+      - 'tools/**'
+      - 'events/**'
 
 permissions:
   contents: write
@@ -35,7 +39,7 @@ jobs:
       - name: Set PYTHONPATH
         run: |
           export PYTHONPATH=$PYTHONPATH:$(pwd)
-          echo "PYTHONPATH=$PYTHONPATH"
+          echo "PYTHONPATH=$PYTHONPATHH"
 
       - name: Run pipeline engine
         run: |
@@ -51,7 +55,7 @@ path = "${{ steps.detect.outputs.file }}"
 parts = path.split("/")
 case_id = None
 
-for i,p in enumerate(parts):
+for i, p in enumerate(parts):
     if p.startswith("NSM_"):
         if i+1 < len(parts):
             case_id = f"{p}_{parts[i+1]}"
@@ -62,6 +66,7 @@ if case_id:
     archive_case(case_id, source_file=path)
 EOF
 
+
       - name: Update SOT
         run: |
           python tools/build_sot.py
@@ -71,5 +76,5 @@ EOF
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add .
-          git commit -m "auto process case + archive + sot [skip ci]" || echo "no changes"
+          git commit -m "auto process + sot sync [skip ci]" || echo "no changes"
           git push
