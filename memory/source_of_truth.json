@@ -5,7 +5,7 @@
     "debug_runs": 33,
     "sessions": 2
   },
-  "tree": [],
+  "tree": [".github/", "cases/", "events/", "gpt-os-controller/", "memory/", "meta/", "modules/", "scripts/", "tests/", "tools/"],
   "debug_files": [],
   "session_files": [],
   "last_error": "memory/debug/run_23686782458.json",
