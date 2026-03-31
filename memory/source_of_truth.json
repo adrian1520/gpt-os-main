@@ -1,4 +1,21 @@
 {
   "last_update": "2026-04-01",
+  "repo_state": {
+    "files_count": 61,
+    "debug_runs": 33,
+    "sessions": 2
+  },
+  "tree": [],
+  "debug_files": [],
+  "session_files": [],
+  "last_error": "memory/debug/run_23686782458.json",
+  "current_focus": "stable",
+  "live_session": {
+    "run_id": "23682353617",
+    "status": "success",
+    "action": "init",
+    "timestamp": "2026-03-28T09:31:34Z"
+  },
+  "errors": [],
   "project_context": "memory/legal_os_plan.json"
 }
