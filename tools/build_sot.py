@@ -1,97 +1,87 @@
 import json, os
 from datetime import datetime, UTC
+ROOT = "."
+
+def scan_repo_tree():
+    all files = []
+    for root, dir, files in os.walk(ROOT):
+        for f in files:
+            path = os.path.join(root, f)
+            all files.append(path.replace("./", ""))
+    return sorted(all files)
+
+def scan_debug(files):
+    return sorted([f for f in files if f.startswith("memory/debug/")])
+
+def scan_sessions(files):
+    return sorted([f for f in files if f.startswith("memory/session/")])
 
 def safe_load(path):
     try:
         with open(path) as f:
             return json.load(f)
-    except Exception:
+    except:
         return None
-
-try:
-    with open("tree.json") as f:
-        data = json.load(f)
-except Exception:
-    data = {}
-
-files = [
-    item.get("path")
-    for item in data.get("tree", [])
-    if isinstance(item, dict) and "path" in item
-]
-
-# 🔥 TREE
-tree_paths = [f for f in files if f]
-
-debug_runs = sorted([f for f in files if f and f.startswith("memory/debug/")])
-sessions = sorted([f for f in files if f and f.startswith("memory/session/")])
-
-last_error = debug_runs[-1] if debug_runs else None
 
 def load_errors(debug_files):
     errors = []
-    for path in reversed(debug_files[-10:]):
-        data = safe_load(path)
-        if data:
+    for p in debug_files[-10:]:
+        d = safe_load(p)
+        if d:
             errors.append({
-                "run_id": data.get("run_id"),
-                "error": data.get("error_snippet"),
-                "timestamp": data.get("timestamp"),
-                "status": data.get("status")
+                "run_id": d.get("run_id"),
+                "error": d.get("error_snippet"),
+                "timestamp": d.get("timestamp")
             })
     return errors
 
-error_list = load_errors(debug_runs)
+files = scan_repo_tree()
+debug_files = scan_debug(files)
+sessions = scan_sessions(files)
 
-session_current = safe_load("memory/session/current.json")
+last_error = debug_files[-1] if debug_files else None
+errors = load_errors(debug_files)
 
-def resolve_focus(session, debug_runs, sessions):
-    if session and isinstance(session, dict):
-        status = session.get("status")
-        if status == "failed":
-            return "debug"
-        elif status == "success":
-            return "stable"
-        elif status == "running":
-            return "running"
-        else:
-            return "unknown"
-    if debug_runs:
+session = safe_load("memory/session/current.json")
+
+def resolve_focus(session):
+    if not session:
+        return "init"
+    status = session.get("status")
+    if status == "failed":
         return "debug"
-    if sessions:
-        return "continue"
-    return "init"
+    if status == "success":
+        return "stable"
+    return "unknown"
 
-current_focus = resolve_focus(session_current, debug_runs, sessions)
-
-def normalize_sot(sot):
-    if not sot.get("tree"):
-        sot["tree"] = []
-    if not sot.get("errors"):
-        sot["errors"] = []
-    if not sot.get("live_session"):
-        sot["live_session"] = None
-    return sot
+current_focus = resolve_focus(session)
 
 now = datetime.now(UTC).isoformat()
 
 sot = {
+    "rules": {
+        "pre_read_sot": "IF Answer on User Input_message THEN MUST READ SOT BEFORE",
+        "context_injection": "ALWAYS LOAD PROJECT CONTEXT AND DOMAIN SOT BEFORE DECISION"
+    },
+    "context_sources": {
+        "project": "memory/legal_os_plan.json",
+        "domain_sot": "memory/legal_sot.json"
+    },
     "last_update": now,
     "repo_state": {
         "files_count": len(files),
-        "debug_runs": len(debug_runs),
+        "debug_runs": len(debug_files),
         "sessions": len(sessions)
     },
-    "tree": tree_paths[:100],
-    "debug_files": debug_runs[:10],
-    "session_files": sessions[:10],
+    "tree": files[:100],
+    "tree_full": files,
+    "debug_files": debug_files,
+    "session_files": sessions,
     "last_error": last_error,
     "current_focus": current_focus,
-    "live_session": session_current,
-    "errors": error_list
+    "live_session": session,
+    "errors": errors
 }
 
-sot = normalize_sot(sot)
-
-with open("sot.json", "w") as f:
+with open("memory/source_of_truth.json", "w") as f:
     json.dump(sot, f, indent=2)
