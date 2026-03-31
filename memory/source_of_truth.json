@@ -1,6 +1,11 @@
 {
   "rules": {
-    "pre_read_sot": "IF Answer on User Input_message THEN MUST READ SOT BEFORE"
+    "pre_read_sot": "IF Answer on User Input_message THEN MUST READ SOT BEFORE",
+    "context_injection": "ALWAYS LOAD PROJECT CONTEXT AND DOMAIN SOT BEFORE DECISION"
+  },
+  "context_sources": {
+    "project": "memory/legal_os_plan.json",
+    "domain_sot": "memory/legal_sot.json"
   },
   "last_update": "2026-04-01",
   "repo_state": {
@@ -19,6 +24,5 @@
     "action": "init",
     "timestamp": "2026-03-28T09:31:34Z"
   },
-  "errors": [],
-  "project_context": "memory/legal_os_plan.json"
+  "errors": []
 }
