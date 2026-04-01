@@ -1,40 +1,4 @@
 {
-  "id": "rules_api",
-  "role": "constraints_only",
-  "version": "1.0",
-  "type": "execution_rules",
-
-  "purpose": "Define deterministic execution rules aligned with execution-first architecture",
-
-  "system_model": {
-    "repository": "single_source_of_truth",
-    "api": "execution_layer",
-    "interpreter": "mandatory_write_layer"
-  },
-
-  "global_failure_rule": {
-    "condition": "any_required_condition_fails",
-    "action": "⚠ BRAK DANYCH",
-    "constraints": [
-      "no_simulation",
-      "no_fallback"
-    ]
-  },
-
-  "sot_rule": {
-    "definition": "SOT = ONLY VALID STATE",
-    "allowed_sources": [
-      "SOT",
-      "API"
-    ],
-    "forbidden": [
-      "knowledge_as_state",
-      "cached_data",
-      "inferred_state"
-    ],
-    "on_violation": "⚠ BRAK DANYCH"
-  },
-
   "api_priority": {
     "absolute": true,
     "rules": [
@@ -48,92 +12,42 @@
       }
     ]
   },
-
-  "post_execution_validation": {
-    "phase": "after_execution_attempt",
+  "execution_types": {
+    "async": "repositoryDispatch_non_write_only",
+    "on_misuse": "⚠ BRAK DANYCH",
+    "read": "api",
+    "write": "interpreter_plus_api"
+  },
+  "final_model": {
+    "api": "execution",
+    "gpt": "generator",
+    "interpreter": "validator",
+    "system": "deterministic"
+  },
+  "final_rule": {
+    "action": "⚠ BRAK DANYCH",
     "conditions": [
-      {
-        "if": "execution_attempted AND api_not_executed AND interpreter_not_used",
-        "then": "⚠ BRAK DANYCH"
-      }
+      "execution_not_attempted",
+      "api_not_used_when_required"
     ]
   },
-
-  "read_rule": {
-    "conditions": [
-      {
-        "if": "read_required",
-        "then": "must_call_api"
-      },
-      {
-        "if": "api_not_called_for_read",
-        "then": "⚠ BRAK DANYCH"
-      }
+  "global_failure_rule": {
+    "action": "⚠ BRAK DANYCH",
+    "condition": "any_required_condition_fails",
+    "constraints": [
+      "no_simulation",
+      "no_fallback"
     ]
   },
-
-  "write_system": {
-    "mode": "interpreter_first",
-    "flow": [
-      {
-        "type": "api",
-        "action": "getFileContent",
-        "params": {
-          "sha": "fresh"
-        }
-      },
-      {
-        "type": "interpreter",
-        "actions": [
-          "normalize",
-          "validate",
-          "encode_base64"
-        ]
-      },
-      {
-        "type": "api",
-        "action": "createOrUpdateFile"
-      }
+  "governor_compatibility": {
+    "must_verify": [
+      "sot_loaded",
+      "execution_attempted",
+      "api_used",
+      "interpreter_used_for_write"
     ]
   },
-
-  "write_validation": {
-    "trigger": "write_detected",
-    "conditions": [
-      {
-        "check": "api_calls >= 2"
-      },
-      {
-        "check": "interpreter_used == true"
-      }
-    ],
-    "on_fail": "⚠ INTERPRETER REQUIRED"
-  },
-
-  "sha_safety": {
-    "rules": [
-      "always_fetch_fresh_sha",
-      "never_reuse_cached_sha"
-    ],
-    "conflict_handling": {
-      "on_409": "retry_once",
-      "on_retry_fail": "⚠ BRAK DANYCH"
-    }
-  },
-
-  "memory_write_protocol": {
-    "applies_to": [
-      "memory/debug/*",
-      "memory/session/*",
-      "memory/source_of_truth.json"
-    ],
-    "flow": [
-      "getFileContent",
-      "interpreter",
-      "createOrUpdateFile"
-    ]
-  },
-
+  "id": "rules_api",
   "memory_validation": {
     "conditions": [
       {
@@ -146,28 +60,44 @@
       }
     ]
   },
-
-  "no_simulation_rule": {
-    "condition": "execution_expected AND execution_not_attempted",
-    "action": "⚠ BRAK DANYCH"
-  },
-
-  "execution_types": {
-    "read": "api",
-    "write": "interpreter_plus_api",
-    "async": "repositoryDispatch_non_write_only",
-    "on_misuse": "⚠ BRAK DANYCH"
-  },
-
-  "governor_compatibility": {
-    "must_verify": [
-      "sot_loaded",
-      "execution_attempted",
-      "api_used",
-      "interpreter_used_for_write"
+  "memory_write_protocol": {
+    "applies_to": [
+      "memory/debug/*",
+      "memory/session/*",
+      "memory/source_of_truth.json"
+    ],
+    "flow": [
+      "getFileContent",
+      "interpreter",
+      "createOrUpdateFile"
     ]
   },
-
+  "no_simulation_rule": {
+    "action": "⚠ BRAK DANYCH",
+    "condition": "execution_expected AND execution_not_attempted"
+  },
+  "post_execution_validation": {
+    "conditions": [
+      {
+        "if": "execution_attempted AND api_not_executed AND interpreter_not_used",
+        "then": "⚠ BRAK DANYCH"
+      }
+    ],
+    "phase": "after_execution_attempt"
+  },
+  "purpose": "Define deterministic execution rules aligned with execution-first architecture",
+  "read_rule": {
+    "conditions": [
+      {
+        "if": "read_required",
+        "then": "must_call_api"
+      },
+      {
+        "if": "api_not_called_for_read",
+        "then": "⚠ BRAK DANYCH"
+      }
+    ]
+  },
   "response_policy": {
     "allowed": [
       "api_result",
@@ -183,19 +113,71 @@
       "simulation"
     ]
   },
-
-  "final_rule": {
-    "conditions": [
-      "execution_not_attempted",
-      "api_not_used_when_required"
-    ],
-    "action": "⚠ BRAK DANYCH"
+  "role": "constraints_only",
+  "sha_safety": {
+    "conflict_handling": {
+      "on_409": "retry_once",
+      "on_retry_fail": "⚠ BRAK DANYCH"
+    },
+    "rules": [
+      "always_fetch_fresh_sha",
+      "never_reuse_cached_sha"
+    ]
   },
-
-  "final_model": {
-    "gpt": "generator",
-    "interpreter": "validator",
-    "api": "execution",
-    "system": "deterministic"
+  "sot_rule": {
+    "allowed_sources": [
+      "SOT",
+      "API"
+    ],
+    "definition": "SOT = ONLY VALID STATE",
+    "forbidden": [
+      "knowledge_as_state",
+      "cached_data",
+      "inferred_state"
+    ],
+    "on_violation": "⚠ BRAK DANYCH"
+  },
+  "system_model": {
+    "api": "execution_layer",
+    "interpreter": "mandatory_write_layer",
+    "repository": "single_source_of_truth"
+  },
+  "type": "execution_rules",
+  "version": "1.0",
+  "write_system": {
+    "flow": [
+      {
+        "action": "getFileContent",
+        "params": {
+          "sha": "fresh"
+        },
+        "type": "api"
+      },
+      {
+        "actions": [
+          "normalize",
+          "validate",
+          "encode_base64"
+        ],
+        "type": "interpreter"
+      },
+      {
+        "action": "createOrUpdateFile",
+        "type": "api"
+      }
+    ],
+    "mode": "interpreter_first"
+  },
+  "write_validation": {
+    "conditions": [
+      {
+        "check": "api_calls >= 2"
+      },
+      {
+        "check": "interpreter_used == true"
+      }
+    ],
+    "on_fail": "⚠ INTERPRETER REQUIRED",
+    "trigger": "write_detected"
   }
 }
