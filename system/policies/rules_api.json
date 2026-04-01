@@ -1,9 +1,8 @@
 {
   "id": "rules_api",
   "role": "constraints_only",
-  "version": "1.0",
+  "version": "1.1",
   "type": "execution_rules",
-
   "purpose": "Define deterministic execution rules aligned with execution-first architecture",
 
   "system_model": {
@@ -15,61 +14,51 @@
   "global_failure_rule": {
     "condition": "any_required_condition_fails",
     "action": "⚠ BRAK DANYCH",
-    "constraints": [
-      "no_simulation",
-      "no_fallback"
-    ]
+    "constraints": ["no_simulation", "no_fallback"]
   },
 
   "sot_rule": {
     "definition": "SOT = ONLY VALID STATE",
-    "allowed_sources": [
-      "SOT",
-      "API"
-    ],
-    "forbidden": [
-      "knowledge_as_state",
-      "cached_data",
-      "inferred_state"
-    ],
+    "allowed_sources": ["SOT", "API"],
+    "forbidden": ["knowledge_as_state", "cached_data", "inferred_state"],
     "on_violation": "⚠ BRAK DANYCH"
   },
 
-  "api_priority": {
-    "absolute": true,
-    "rules": [
-      {
-        "if": "data_exists_in_repository",
-        "then": "must_call_api"
-      },
-      {
-        "if": "api_not_used",
-        "then": "⚠ BRAK DANYCH"
-      }
-    ]
-  },
-
-  "post_execution_validation": {
-    "phase": "after_execution_attempt",
-    "conditions": [
-      {
-        "if": "execution_attempted AND api_not_executed AND interpreter_not_used",
-        "then": "⚠ BRAK DANYCH"
-      }
-    ]
-  },
-
-  "read_rule": {
-    "conditions": [
-      {
-        "if": "read_required",
-        "then": "must_call_api"
-      },
-      {
-        "if": "api_not_called_for_read",
-        "then": "⚠ BRAK DANYCH"
-      }
-    ]
+  "execution_requirements": {
+    "api_priority": {
+      "absolute": true,
+      "rules": [
+        {
+          "if": "data_exists_in_repository",
+          "then": "must_call_api"
+        },
+        {
+          "if": "api_not_used",
+          "then": "⚠ BRAK DANYCH"
+        }
+      ]
+    },
+    "post_execution_validation": {
+      "phase": "after_execution_attempt",
+      "conditions": [
+        {
+          "if": "execution_attempted AND api_not_executed AND interpreter_not_used",
+          "then": "⚠ BRAK DANYCH"
+        }
+      ]
+    },
+    "read_rule": {
+      "conditions": [
+        {
+          "if": "read_required",
+          "then": "must_call_api"
+        },
+        {
+          "if": "api_not_called_for_read",
+          "then": "⚠ BRAK DANYCH"
+        }
+      ]
+    }
   },
 
   "write_system": {
@@ -84,11 +73,7 @@
       },
       {
         "type": "interpreter",
-        "actions": [
-          "normalize",
-          "validate",
-          "encode_base64"
-        ]
+        "actions": ["normalize", "validate", "encode_base64"]
       },
       {
         "type": "api",
@@ -99,22 +84,12 @@
 
   "write_validation": {
     "trigger": "write_detected",
-    "conditions": [
-      {
-        "check": "api_calls >= 2"
-      },
-      {
-        "check": "interpreter_used == true"
-      }
-    ],
+    "conditions": [{ "check": "api_calls >= 2" }, { "check": "interpreter_used == true" }],
     "on_fail": "⚠ INTERPRETER REQUIRED"
   },
 
   "sha_safety": {
-    "rules": [
-      "always_fetch_fresh_sha",
-      "never_reuse_cached_sha"
-    ],
+    "rules": ["always_fetch_fresh_sha", "never_reuse_cached_sha"],
     "conflict_handling": {
       "on_409": "retry_once",
       "on_retry_fail": "⚠ BRAK DANYCH"
@@ -122,16 +97,8 @@
   },
 
   "memory_write_protocol": {
-    "applies_to": [
-      "memory/debug/*",
-      "memory/session/*",
-      "memory/source_of_truth.json"
-    ],
-    "flow": [
-      "getFileContent",
-      "interpreter",
-      "createOrUpdateFile"
-    ]
+    "applies_to": ["memory/debug/*", "memory/session/*", "memory/source_of_truth.json"],
+    "flow": ["getFileContent", "interpreter", "createOrUpdateFile"]
   },
 
   "memory_validation": {
@@ -147,11 +114,6 @@
     ]
   },
 
-  "no_simulation_rule": {
-    "condition": "execution_expected AND execution_not_attempted",
-    "action": "⚠ BRAK DANYCH"
-  },
-
   "execution_types": {
     "read": "api",
     "write": "interpreter_plus_api",
@@ -159,13 +121,13 @@
     "on_misuse": "⚠ BRAK DANYCH"
   },
 
+  "no_simulation_rule": {
+    "condition": "execution_expected AND execution_not_attempted",
+    "action": "⚠ BRAK DANYCH"
+  },
+
   "governor_compatibility": {
-    "must_verify": [
-      "sot_loaded",
-      "execution_attempted",
-      "api_used",
-      "interpreter_used_for_write"
-    ]
+    "must_verify": ["sot_loaded", "execution_attempted", "api_used", "interpreter_used_for_write"]
   },
 
   "response_policy": {
@@ -176,19 +138,11 @@
       "⚠ BRAK DANYCH",
       "⚠ INTERPRETER REQUIRED"
     ],
-    "forbidden": [
-      "fake_execution",
-      "skip_api",
-      "skip_interpreter",
-      "simulation"
-    ]
+    "forbidden": ["fake_execution", "skip_api", "skip_interpreter", "simulation"]
   },
 
   "final_rule": {
-    "conditions": [
-      "execution_not_attempted",
-      "api_not_used_when_required"
-    ],
+    "conditions": ["execution_not_attempted", "api_not_used_when_required"],
     "action": "⚠ BRAK DANYCH"
   },
 
