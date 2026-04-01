@@ -1,2 +1,0 @@
-RAW WHRIGHT TEST OK
-1: No Base64 in GPT
