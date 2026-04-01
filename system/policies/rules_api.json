@@ -3,15 +3,12 @@
   "role": "constraints_only",
   "version": "1.0",
   "type": "execution_rules",
-
   "purpose": "Define deterministic execution rules aligned with execution-first architecture",
-
   "system_model": {
     "repository": "single_source_of_truth",
     "api": "execution_layer",
     "interpreter": "mandatory_write_layer"
   },
-
   "global_failure_rule": {
     "condition": "any_required_condition_fails",
     "action": "⚠ BRAK DANYCH",
@@ -20,7 +17,6 @@
       "no_fallback"
     ]
   },
-
   "sot_rule": {
     "definition": "SOT = ONLY VALID STATE",
     "allowed_sources": [
@@ -34,7 +30,6 @@
     ],
     "on_violation": "⚠ BRAK DANYCH"
   },
-
   "api_priority": {
     "absolute": true,
     "rules": [
@@ -48,7 +43,6 @@
       }
     ]
   },
-
   "post_execution_validation": {
     "phase": "after_execution_attempt",
     "conditions": [
@@ -58,7 +52,6 @@
       }
     ]
   },
-
   "read_rule": {
     "conditions": [
       {
@@ -71,7 +64,6 @@
       }
     ]
   },
-
   "write_system": {
     "mode": "interpreter_first",
     "flow": [
@@ -96,7 +88,6 @@
       }
     ]
   },
-
   "write_validation": {
     "trigger": "write_detected",
     "conditions": [
@@ -109,7 +100,6 @@
     ],
     "on_fail": "⚠ INTERPRETER REQUIRED"
   },
-
   "sha_safety": {
     "rules": [
       "always_fetch_fresh_sha",
@@ -120,7 +110,6 @@
       "on_retry_fail": "⚠ BRAK DANYCH"
     }
   },
-
   "memory_write_protocol": {
     "applies_to": [
       "memory/debug/*",
@@ -133,7 +122,6 @@
       "createOrUpdateFile"
     ]
   },
-
   "memory_validation": {
     "conditions": [
       {
@@ -146,19 +134,16 @@
       }
     ]
   },
-
   "no_simulation_rule": {
     "condition": "execution_expected AND execution_not_attempted",
     "action": "⚠ BRAK DANYCH"
   },
-
   "execution_types": {
     "read": "api",
     "write": "interpreter_plus_api",
     "async": "repositoryDispatch_non_write_only",
     "on_misuse": "⚠ BRAK DANYCH"
   },
-
   "governor_compatibility": {
     "must_verify": [
       "sot_loaded",
@@ -167,7 +152,6 @@
       "interpreter_used_for_write"
     ]
   },
-
   "response_policy": {
     "allowed": [
       "api_result",
@@ -183,7 +167,6 @@
       "simulation"
     ]
   },
-
   "final_rule": {
     "conditions": [
       "execution_not_attempted",
@@ -191,7 +174,6 @@
     ],
     "action": "⚠ BRAK DANYCH"
   },
-
   "final_model": {
     "gpt": "generator",
     "interpreter": "validator",
