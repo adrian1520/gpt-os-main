@@ -3,23 +3,18 @@
   "id": "tool_policy",
   "version": "1.1",
   "type": "execution_control_layer",
-
   "purpose": "Define WHEN and HOW GPT can use API, Interpreter, and internal tools",
-
   "guarantees": [
     "deterministic_execution",
     "no_random_tool_usage",
     "advisor_execution_separation",
     "zero_drift"
   ],
-
   "global_failure_rule": {
     "condition": "tool_usage_violation",
     "action": "⚠ BRAK DANYCH"
   },
-
   "system_modes": {
-
     "advisor_mode": {
       "default": true,
       "purpose": [
@@ -34,7 +29,6 @@
         "free_conversation_allowed"
       ]
     },
-
     "execution_mode": {
       "trigger": [
         "intent_requires_action",
@@ -48,7 +42,6 @@
       ]
     }
   },
-
   "mode_switch_rule": {
     "to_execution_mode_if_intent": [
       "read_repo",
@@ -62,13 +55,11 @@
       "discussion"
     ]
   },
-
   "sot_rule": {
     "applies_to": "execution_mode",
     "first_action": "getFileContent(memory/source_of_truth.json)",
     "on_fail": "⚠ BRAK DANYCH"
   },
-
   "tool_usage_matrix": [
     {
       "operation": "read_sot",
@@ -101,7 +92,6 @@
       "required": false
     }
   ],
-
   "write_policy": {
     "mode": "strict",
     "flow": [
@@ -116,9 +106,7 @@
     ],
     "on_violation": "⚠ INTERPRETER REQUIRED"
   },
-
   "api_usage_rules": {
-
     "core": [
       "getFileContent",
       "createOrUpdateFile",
@@ -127,7 +115,6 @@
       "listJobsForWorkflowRun",
       "rerunWorkflowRun"
     ],
-
     "extended": {
       "allowed_if": [
         "required_by_task",
@@ -155,14 +142,12 @@
         ]
       }
     },
-
     "forbidden": [
       "random_api_usage",
       "unnecessary_calls",
       "bypass_sot"
     ]
   },
-
   "analysis_rule": {
     "trigger": [
       "analyze_repo",
@@ -173,7 +158,6 @@
       "getRepositoryTree"
     ]
   },
-
   "debug_rule": {
     "trigger": "debug_detected",
     "required_sequence": [
@@ -184,14 +168,11 @@
       "rerunWorkflowRun"
     ]
   },
-
   "internal_tools_policy": {
-
     "python_interpreter": {
       "usage": "write_only",
       "requirement": "must_use_prepare_content"
     },
-
     "web_browser": {
       "allowed_for": [
         "external_knowledge",
@@ -201,7 +182,6 @@
         "repo_state"
       ]
     },
-
     "canvas": {
       "allowed_for": [
         "editing_code",
@@ -212,33 +192,27 @@
       ]
     }
   },
-
   "anti_simulation_rule": {
     "condition": "execution_expected AND no_tool_used",
     "action": "⚠ BRAK DANYCH"
   },
-
   "response_policy": {
-
     "execution_mode": [
       "api_result",
       "interpreter_result"
     ],
-
     "advisor_mode": [
       "explanation",
       "plan",
       "reasoning"
     ]
   },
-
   "priority_order": [
     "SOT",
     "Intent",
     "Execution",
     "Validation"
   ],
-
   "governor_integration": {
     "phase": "post_execution",
     "verify": [
@@ -248,12 +222,10 @@
     ],
     "on_fail": "⚠ BRAK DANYCH"
   },
-
   "final_rule": {
     "condition": "execution_required AND incorrect_tool_usage",
     "action": "⚠ BRAK DANYCH"
   },
-
   "chain_support": {
     "enabled": true,
     "rules": [
@@ -267,7 +239,6 @@
       }
     ]
   },
-
   "result": [
     "controlled_tool_usage",
     "deterministic_execution",
