@@ -1,0 +1,161 @@
+{
+  "id": "write_executor",
+  "version": "1.0",
+  "type": "transform_module",
+  "role": "interpreter_engine",
+  "used_by": "execution_engine",
+
+  "purpose": "Deterministic transformation module used by the Interpreter before any write operation",
+
+  "responsibility": [
+    "normalization",
+    "validation",
+    "base64_encoding"
+  ],
+
+  "forbidden": [
+    "api_calls",
+    "file_system_access",
+    "external_dependencies"
+  ],
+
+  "role_in_system": {
+    "write_pipeline": [
+      "GPT_raw_content",
+      "interpreter_transform",
+      "github_api_createOrUpdateFile"
+    ]
+  },
+
+  "core_principles": {
+    "required": [
+      "deterministic",
+      "stateless",
+      "side_effect_free"
+    ],
+    "forbidden": [
+      "api_calls",
+      "file_system_access",
+      "external_dependencies"
+    ]
+  },
+
+  "transformation_flow": {
+    "function": "prepare_content",
+    "steps": [
+      "normalize_content",
+      "validate_content",
+      "encode_base64"
+    ]
+  },
+
+  "validation_rules": {
+    "required": [
+      "content_not_empty",
+      "content_size_less_equal_1MB"
+    ],
+    "note": "type_validation_in_normalization",
+    "on_fail": "raise ValueError"
+  },
+
+  "normalization_rules": {
+    "required": [
+      "convert_crlf_to_lf",
+      "convert_tabs_to_2_spaces",
+      "remove_trailing_whitespace",
+      "ensure_newline_at_eof"
+    ]
+  },
+
+  "encoding_rule": {
+    "type": "base64",
+    "charset": "utf-8"
+  },
+
+  "output_contract": {
+    "function": "prepare_content",
+    "returns": "base64_encoded_string",
+    "used_as": "createOrUpdateFile.content"
+  },
+
+  "integration_rules": {
+    "interpreter_must": [
+      "call_prepare_content"
+    ],
+    "gpt_must_not": [
+      "encode_base64",
+      "normalize_content",
+      "construct_api_payload"
+    ]
+  },
+  "execution_binding": {
+    "required": true,
+    "must_be_called_via_command_contract": true
+  },
+
+  "failure_rule": {
+    "conditions": [
+      "validation_fails",
+      "encoding_fails"
+    ],
+    "action": "raise ValueError"
+  },
+
+  "implementation": {
+    "language": "python",
+    "functions": {
+
+      "validate_repo": {
+        "params": ["owner", "repo"],
+        "logic": "raise ValueError if owner or repo missing"
+      },
+
+      "validate_path": {
+        "params": ["path"],
+        "logic": [
+          "path must not be empty",
+          "path must not contain '..'",
+          "path must not start with '/'"
+        ]
+      },
+
+      "validate_message": {
+        "params": ["message"],
+        "logic": "message must be at least 3 characters"
+      },
+
+      "validate_content": {
+        "params": ["content"],
+        "logic": [
+          "content must not be empty",
+          "content size <= 1MB (utf-8)"
+        ]
+      },
+
+      "normalize_content": {
+        "params": ["content"],
+        "logic": [
+          "ensure content is string",
+          "replace CRLF with LF",
+          "replace tabs with 2 spaces",
+          "strip trailing whitespace per line",
+          "ensure newline at EOF"
+        ]
+      },
+
+      "encode_base64": {
+        "params": ["content"],
+        "logic": "base64 encode UTF-8 content with error handling"
+      },
+
+      "prepare_content": {
+        "params": ["raw_content"],
+        "flow": [
+          "normalize_content",
+          "validate_content",
+          "encode_base64"
+        ]
+      }
+    }
+  }
+}
