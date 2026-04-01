@@ -1,0 +1,256 @@
+{
+  "integration": {
+    "requires_execution_system": true,
+    "requires_command_contract": true
+  },
+  "id": "test_debug_rules",
+  "version": "1.0",
+  "type": "deterministic_validation_system",
+
+  "purpose": "Define strict rules for testing, detecting failures, fixing errors, and validating system correctness",
+
+  "goal": [
+    "reliable_execution",
+    "self_healing_system",
+    "zero_silent_failures",
+    "gpt_os_debug_compatibility"
+  ],
+
+  "global_failure_rule": {
+    "conditions": [
+      "test_skipped",
+      "simulated_debug",
+      "unclear_process",
+      "incomplete_process"
+    ],
+    "action": "⚠ BRAK DANYCH"
+  },
+
+  "core_principle": {
+    "required": [
+      "explicit",
+      "reproducible",
+      "minimal",
+      "deterministic"
+    ],
+    "forbidden": [
+      "assumptions",
+      "skipping_tests",
+      "implicit_validation"
+    ]
+  },
+
+  "testing_strategy": {
+
+    "test_every_component": {
+      "required": [
+        "engine",
+        "script",
+        "pipeline"
+      ],
+      "must_be_testable": true
+    },
+
+    "test_types": {
+
+      "unit_test": {
+        "scope": "single_engine",
+        "pattern": "engine_execute_returns_dict"
+      },
+
+      "integration_test": {
+        "scope": "pipeline",
+        "pattern": "pipeline_run_returns_result"
+      },
+
+      "runtime_test": {
+        "scope": "execution",
+        "pattern": "run_main_script"
+      }
+    }
+  },
+
+  "test_design_rules": {
+
+    "simple_inputs": {
+      "required": [
+        "minimal_data",
+        "low_complexity"
+      ]
+    },
+
+    "explicit_assertions": {
+      "required": [
+        "explicit_conditions"
+      ],
+      "forbidden": [
+        "generic_asserts"
+      ]
+    },
+
+    "no_randomness": {
+      "forbidden": [
+        "random_values",
+        "time_dependent_logic"
+      ]
+    }
+  },
+
+  "debug_flow": {
+
+    "steps": [
+      "detect",
+      "localize",
+      "classify",
+      "fix",
+      "verify"
+    ],
+
+    "detect": [
+      "exception",
+      "wrong_output",
+      "pipeline_failure"
+    ],
+
+    "localize": [
+      "file",
+      "function",
+      "line"
+    ],
+
+    "classify": [
+      "SYNTAX_ERROR",
+      "LOGIC_ERROR",
+      "MISSING_FILE",
+      "DEPENDENCY_ERROR",
+      "RUNTIME_ERROR"
+    ],
+
+    "fix": {
+      "rule": "minimal_patch_only",
+      "forbidden": [
+        "full_rewrites",
+        "unrelated_refactoring"
+      ]
+    },
+
+    "verify": [
+      "re_run_test",
+      "confirm_fix",
+      "confirm_no_regression"
+    ]
+  },
+
+  "fix_rules": {
+
+    "minimal_patch": {
+      "forbidden": [
+        "rewrite_entire_file",
+        "structural_refactoring"
+      ]
+    },
+
+    "preserve_structure": {
+      "required": [
+        "architecture_must_remain_intact"
+      ]
+    },
+
+    "no_new_complexity": {
+      "forbidden": [
+        "new_layers",
+        "new_dependencies"
+      ]
+    }
+  },
+
+  "error_handling_rules": {
+    "required": [
+      "explicit_error_raising"
+    ],
+    "forbidden": [
+      "silent_failures",
+      "empty_except",
+      "bare_except_pass"
+    ]
+  },
+
+  "debug_output_rule": {
+    "required_fields": [
+      "error",
+      "location",
+      "fix"
+    ],
+    "format": "structured_object"
+  },
+
+  "no_silent_failures": {
+    "required": [
+      "errors_visible",
+      "errors_returned"
+    ]
+  },
+
+  "pipeline_debug": {
+    "rules": [
+      "check_logs",
+      "identify_failing_step",
+      "map_to_code"
+    ],
+    "forbidden": [
+      "ignore_logs",
+      "guessing"
+    ]
+  },
+
+  "validation_checklist": {
+    "required": [
+      "error_identified",
+      "location_found",
+      "fix_minimal",
+      "test_rerun",
+      "system_valid"
+    ],
+    "on_fail": "⚠ BRAK DANYCH"
+  },
+
+  "gpt_os_integration": {
+    "required": [
+      "use_debug_system",
+      "use_api_results",
+      "no_simulated_fixes",
+      "follow_interpreter_pipeline"
+    ]
+  },
+
+  "no_simulation_rule": {
+    "forbidden": [
+      "should_work",
+      "likely_fixed"
+    ],
+    "required": [
+      "confirmed_results_only"
+    ]
+  },
+
+  "final_rule": {
+    "conditions": [
+      "untested_system",
+      "partially_tested",
+      "uncertain_state"
+    ],
+    "action": "⚠ BRAK DANYCH"
+  },
+
+  "result": [
+    "reliable_systems",
+    "automatic_debugging",
+    "stable_pipelines",
+    "zero_hidden_failures"
+  ],
+
+  "enforcement": {
+    "test_must_run_after_fix": true,
+    "block_on_failure": true
+  }
+}
