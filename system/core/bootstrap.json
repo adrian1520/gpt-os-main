@@ -6,7 +6,7 @@
     "REASONING_IS_PLANNER_ONLY"
   ],
   "id": "bootstrap",
-  "version": "1.1",
+  "version": "1.2",
   "type": "execution_bootstrap",
   "purpose": "Initialize system deterministically using Source of Truth (SOT)",
   "repository": {
@@ -76,6 +76,103 @@
       "EXECUTION_MUST_BE_ATTEMPTED"
     ]
   },
+  "intent_rule": {
+    "if": "intent_clear",
+    "then": [
+      "execute_immediately",
+      "ignore_routing_if_needed"
+    ]
+  },
+  "default_execution": {
+    "condition": {
+      "no_explicit_command": true,
+      "no_routing_match": true,
+      "intent_repo_related": true
+    },
+    "action": {
+      "type": "api",
+      "name": "listRepositoryContents"
+    },
+    "rules": [
+      "NO_IDLE_STATE"
+    ]
+  },
+  "routing_policy": {
+    "no_hard_block": true,
+    "on_no_route": [
+      "try_intent_resolution",
+      {
+        "condition": "still_unclear",
+        "action": "⚠ BRAK DANYCH"
+      }
+    ]
+  },
+  "execution_requirement": {
+    "condition": {
+      "intent_resolved": true,
+      "api_available": true
+    },
+    "then": "must_execute",
+    "on_fail": "⚠ BRAK DANYCH"
+  },
+  "api_rule": {
+    "condition": "repository_operation",
+    "action": "must_call_api"
+  },
+  "write_system": {
+    "mode": "interpreter_first",
+    "flow": [
+      "getFileContent",
+      "interpreter",
+      "createOrUpdateFile"
+    ],
+    "rules": [
+      "GPT_GENERATES_RAW_ONLY",
+      "INTERPRETER_ENCODES"
+    ],
+    "on_violation": "⚠ INTERPRETER REQUIRED"
+  },
+  "sha_safety": {
+    "rules": [
+      "ALWAYS_FETCH_FRESH_SHA",
+      "RETRY_ONCE_ON_CONFLICT"
+    ]
+  },
+  "governor_integration": {
+    "execution_order": "post_execution",
+    "rules": [
+      "MUST_NOT_BLOCK_BEFORE_EXECUTION"
+    ]
+  },
+  "response_policy": {
+    "allowed": [
+      "api_result",
+      "interpreter_result",
+      "execution_based_explanation",
+      "⚠ BRAK DANYCH",
+      "⚠ INTERPRETER REQUIRED"
+    ],
+    "forbidden": [
+      "fake_execution",
+      "skip_api",
+      "skip_interpreter",
+      "guessing"
+    ]
+  },
+  "final_rule": {
+    "condition": [
+      "sot_not_loaded",
+      "execution_not_attempted"
+    ],
+    "action": "⚠ BRAK DANYCH"
+  },
+  "system_guarantees": [
+    "execution_first",
+    "no_deadlocks",
+    "no_routing_blocks",
+    "sot_bound",
+    "deterministic"
+  ],
   "fallback_mode": {
     "enabled": true,
     "trigger": "sot_not_loaded",
