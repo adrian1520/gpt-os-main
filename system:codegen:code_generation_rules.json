@@ -1,0 +1,246 @@
+{
+  "must_follow": [
+    "system_architecture",
+    "engine_pattern"
+  ],
+  "id": "code_generation_rules",
+  "version": "1.0",
+  "type": "code_generation_policy",
+
+  "purpose": "Define deterministic rules for generating executable code",
+
+  "scope": [
+    "yaml",
+    "github_actions",
+    "repository_pipelines"
+  ],
+
+  "global_failure_rule": {
+    "conditions": [
+      "non_runnable",
+      "ambiguous",
+      "overly_complex",
+      "dependent_on_assumptions"
+    ],
+    "action": "⚠ BRAK DANYCH"
+  },
+
+  "core_principle": {
+    "required": [
+      "minimal",
+      "explicit",
+      "executable",
+      "deterministic"
+    ],
+    "forbidden": [
+      "overengineering",
+      "implicit_logic",
+      "hidden_behavior"
+    ]
+  },
+
+  "generation_model": {
+    "required_flow": [
+      "template",
+      "fill_values",
+      "output"
+    ],
+    "forbidden": [
+      "generate_structure_from_scratch",
+      "dynamic_construction"
+    ]
+  },
+
+  "yaml_rules": {
+
+    "structure": {
+      "required": [
+        "minimal_valid_yaml",
+        "flat_structure"
+      ],
+      "forbidden": [
+        "deep_nesting",
+        "dynamic_structures",
+        "unnecessary_fields"
+      ]
+    },
+
+    "no_inline_logic": {
+      "forbidden_examples": [
+        "multiline_bash_if",
+        "conditional_inline_logic"
+      ],
+      "required_pattern": "single_command_run",
+      "rule": [
+        "yaml_must_not_contain_logic",
+        "logic_must_be_externalized"
+      ]
+    },
+
+    "one_step_one_command": {
+      "required": [
+        "single_command_per_step"
+      ],
+      "forbidden": [
+        "multiple_commands_in_single_step"
+      ]
+    },
+
+    "no_complex_strings": {
+      "forbidden": [
+        "inline_json",
+        "escaped_payloads",
+        "complex_string_construction"
+      ]
+    },
+
+    "official_actions": {
+      "required": [
+        "use_official_github_actions"
+      ],
+      "examples": [
+        "actions/checkout@v4"
+      ],
+      "forbidden": [
+        "manual_git_operations"
+      ]
+    },
+
+    "environment_definition": {
+      "required": [
+        "runtime_defined",
+        "explicit_version"
+      ],
+      "examples": [
+        "python-version: 3.11",
+        "node-version: 20"
+      ]
+    },
+
+    "no_assumptions": {
+      "forbidden": [
+        "assuming_installed_tools",
+        "assuming_existing_files",
+        "assuming_env_variables"
+      ]
+    }
+  },
+
+  "base_template": {
+    "required": true,
+    "template": {
+      "name": "pipeline",
+      "on": {
+        "push": {
+          "branches": ["main"]
+        }
+      },
+      "jobs": {
+        "run": {
+          "runs-on": "ubuntu-latest",
+          "steps": [
+            {
+              "name": "checkout",
+              "uses": "actions/checkout@v4"
+            }
+          ]
+        }
+      }
+    }
+  },
+
+  "python_template": {
+    "required": true,
+    "steps": [
+      {
+        "uses": "actions/setup-python@v5",
+        "with": {
+          "python-version": "3.11"
+        }
+      },
+      {
+        "run": "pip install -r requirements.txt"
+      },
+      {
+        "run": "python main.py"
+      }
+    ]
+  },
+
+  "node_template": {
+    "required": true,
+    "steps": [
+      {
+        "uses": "actions/setup-node@v4",
+        "with": {
+          "node-version": "20"
+        }
+      },
+      {
+        "run": "npm install"
+      },
+      {
+        "run": "npm test"
+      }
+    ]
+  },
+
+  "global_rules": {
+    "required": [
+      "start_from_template",
+      "explicit_commands_only",
+      "linear_pipeline",
+      "runnable_output"
+    ],
+    "forbidden": [
+      "merge_steps",
+      "inline_scripting",
+      "hidden_dependencies",
+      "dynamic_behavior"
+    ]
+  },
+
+  "anti_patterns": [
+    "multiline_bash_logic",
+    "inline_scripting",
+    "missing_checkout",
+    "missing_runtime_setup",
+    "combined_steps",
+    "implicit_assumptions"
+  ],
+
+  "validation": {
+    "required_checks": [
+      "uses_template",
+      "uses_official_actions",
+      "one_command_per_step",
+      "no_inline_logic",
+      "environment_defined",
+      "runnable_without_assumptions"
+    ],
+    "on_fail": "⚠ BRAK DANYCH"
+  },
+
+  "gpt_os_integration": {
+    "required": [
+      "compatible_with_interpreter_pipeline",
+      "safe_for_write_execution",
+      "deterministic_output"
+    ]
+  },
+
+  "final_rule": {
+    "conditions": [
+      "not_minimal",
+      "not_explicit",
+      "not_executable"
+    ],
+    "action": "⚠ BRAK DANYCH"
+  },
+
+  "constraints": {
+    "no_layer_violation": true,
+    "no_direct_api_in_engine": true,
+    "must_use_defined_engines": true
+  }
+}

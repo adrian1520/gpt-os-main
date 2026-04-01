@@ -1,0 +1,249 @@
+{
+  "id": "operation_mapping",
+  "version": "1.0",
+  "type": "operation_resolver",
+
+  "source": "openapi_schema",
+
+  "rules": {
+    "match_type": [
+      "keyword",
+      "semantic"
+    ],
+    "priority": [
+      "exact_match",
+      "keyword_match",
+      "semantic_match"
+    ],
+    "on_fail": "NO_OPERATION"
+  },
+
+  "operations": [
+
+    {
+      "operationId": "getFileContent",
+      "keywords": [
+        "read file",
+        "czytaj plik",
+        "open file",
+        "file content"
+      ],
+      "required_params": ["path"]
+    },
+
+    {
+      "operationId": "createOrUpdateFile",
+      "keywords": [
+        "write file",
+        "zapisz plik",
+        "update file",
+        "create file"
+      ],
+      "required_params": ["path", "content", "message"]
+    },
+
+    {
+      "operationId": "deleteFile",
+      "keywords": [
+        "delete file",
+        "usuń plik"
+      ],
+      "required_params": ["path", "sha"]
+    },
+
+    {
+      "operationId": "listRepositoryContents",
+      "keywords": [
+        "list repo",
+        "files",
+        "repo tree",
+        "check repo",
+        "inspect"
+      ],
+      "required_params": []
+    },
+
+    {
+      "operationId": "getRepositoryTree",
+      "keywords": [
+        "tree",
+        "full tree",
+        "repo tree recursive"
+      ],
+      "required_params": ["tree_sha"]
+    },
+
+    {
+      "operationId": "listCommits",
+      "keywords": [
+        "commits",
+        "list commits",
+        "history"
+      ],
+      "required_params": []
+    },
+
+    {
+      "operationId": "getCommit",
+      "keywords": [
+        "commit",
+        "get commit"
+      ],
+      "required_params": ["ref"]
+    },
+
+    {
+      "operationId": "compareCommits",
+      "keywords": [
+        "compare commits",
+        "diff"
+      ],
+      "required_params": ["base", "head"]
+    },
+
+    {
+      "operationId": "listBranches",
+      "keywords": [
+        "branches",
+        "list branches"
+      ],
+      "required_params": []
+    },
+
+    {
+      "operationId": "createBranch",
+      "keywords": [
+        "create branch"
+      ],
+      "required_params": ["ref", "sha"]
+    },
+
+    {
+      "operationId": "updateBranchRef",
+      "keywords": [
+        "update branch"
+      ],
+      "required_params": ["branch", "sha"]
+    },
+
+    {
+      "operationId": "deleteBranch",
+      "keywords": [
+        "delete branch"
+      ],
+      "required_params": ["branch"]
+    },
+
+    {
+      "operationId": "listPullRequests",
+      "keywords": [
+        "prs",
+        "pull requests"
+      ],
+      "required_params": []
+    },
+
+    {
+      "operationId": "createPullRequest",
+      "keywords": [
+        "create pr",
+        "open pr"
+      ],
+      "required_params": ["title", "head", "base"]
+    },
+
+    {
+      "operationId": "mergePullRequest",
+      "keywords": [
+        "merge pr"
+      ],
+      "required_params": ["pull_number"]
+    },
+
+    {
+      "operationId": "listIssues",
+      "keywords": [
+        "issues"
+      ],
+      "required_params": []
+    },
+
+    {
+      "operationId": "createIssue",
+      "keywords": [
+        "create issue"
+      ],
+      "required_params": ["title"]
+    },
+
+    {
+      "operationId": "createIssueComment",
+      "keywords": [
+        "comment issue"
+      ],
+      "required_params": ["issue_number", "body"]
+    },
+
+    {
+      "operationId": "listWorkflowRuns",
+      "keywords": [
+        "runs",
+        "workflow runs",
+        "ci runs"
+      ],
+      "required_params": []
+    },
+
+    {
+      "operationId": "getWorkflowRun",
+      "keywords": [
+        "run details"
+      ],
+      "required_params": ["run_id"]
+    },
+
+    {
+      "operationId": "listJobsForWorkflowRun",
+      "keywords": [
+        "jobs",
+        "run jobs"
+      ],
+      "required_params": ["run_id"]
+    },
+
+    {
+      "operationId": "rerunWorkflowRun",
+      "keywords": [
+        "rerun",
+        "retry run"
+      ],
+      "required_params": ["run_id"]
+    },
+
+    {
+      "operationId": "cancelWorkflowRun",
+      "keywords": [
+        "cancel run"
+      ],
+      "required_params": ["run_id"]
+    },
+
+    {
+      "operationId": "triggerWorkflow",
+      "keywords": [
+        "trigger workflow"
+      ],
+      "required_params": ["workflow_id", "ref"]
+    },
+
+    {
+      "operationId": "repositoryDispatch",
+      "keywords": [
+        "dispatch",
+        "event trigger"
+      ],
+      "required_params": ["event_type"]
+    }
+
+  ]
+}

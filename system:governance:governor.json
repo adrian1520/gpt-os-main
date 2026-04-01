@@ -1,0 +1,194 @@
+{
+  "id": "governor",
+  "version": "1.1",
+  "type": "execution_validation_engine",
+  "authority": "single_post_execution_validator",
+
+  "purpose": "Governor enforces execution integrity after execution attempt",
+
+  "position_in_system": {
+    "flow": [
+      "SOT",
+      "INTENT",
+      "EXECUTION",
+      "GOVERNOR"
+    ],
+    "execution_timing": "post_execution_only"
+  },
+
+  "input": {
+    "required": [
+      "state",
+      "mode",
+      "resolved_intent",
+      "execution_trace"
+    ],
+    "optional": [
+      "planner_state"
+    ]
+  },
+
+  "core_principles": {
+    "required": [
+      "execution_before_validation"
+    ],
+    "forbidden": [
+      "blocking_execution_before_attempt",
+      "validating_intent_before_execution",
+      "routing_based_blocking"
+    ]
+  },
+
+  "pre_execution_requirement": {
+    "required": [
+      "getFileContent_called"
+    ],
+    "on_fail": "⚠ BRAK DANYCH"
+  },
+
+  "contract_validation": {
+    "required": true,
+    "checks": [
+      "execution_chain_matches_command_contract",
+      "no_unknown_commands"
+    ],
+    "on_fail": "⚠ BRAK DANYCH"
+  },
+
+  "post_execution_validation": {
+
+    "api_usage": {
+      "condition": "repo_operation_expected AND api_calls == 0",
+      "action": "⚠ BRAK DANYCH"
+    },
+
+    "write_validation": {
+      "condition": "execution_trace.write_operation == true",
+      "verify": [
+        "api_calls >= 2",
+        "interpreter_used == true"
+      ],
+      "on_fail": "⚠ INTERPRETER REQUIRED"
+    },
+
+    "execution_completeness": {
+      "condition": "intent_resolved AND api_calls == 0",
+      "action": "⚠ BRAK DANYCH"
+    },
+
+    "response_source": {
+      "required": [
+        "api",
+        "interpreter"
+      ],
+      "condition": "response_not_derived_from_execution",
+      "action": "⚠ BRAK DANYCH"
+    },
+
+    "anti_simulation": {
+      "condition": "execution_claimed AND execution_trace_empty",
+      "action": "⚠ BRAK DANYCH"
+    },
+
+    "sot_consistency": {
+      "condition": "response_contradicts_sot",
+      "action": "⚠ BRAK DANYCH"
+    }
+  },
+
+  "planner_validation": {
+    "condition": "planner_active",
+    "verify": [
+      "step_executed",
+      "memory_updated"
+    ],
+    "on_fail": "⚠ BRAK DANYCH"
+  },
+
+  "execution_trace_model": {
+    "fields": {
+      "api_calls": "array",
+      "interpreter_used": "boolean",
+      "write_operation": "boolean"
+    }
+  },
+
+  "required_conditions": {
+    "read": [
+      "api_calls >= 1"
+    ],
+    "write": [
+      "api_calls >= 2",
+      "interpreter_used == true"
+    ],
+    "debug": [
+      "api_calls >= 1"
+    ]
+  },
+
+  "mode_rule": {
+    "condition": "mode == DEBUG",
+    "requirement": "execution_targets_debug_or_workflow_api"
+  },
+
+  "strict_mode": {
+    "conditions": [
+      "execution_trace_empty",
+      "partial_execution"
+    ],
+    "action": "⚠ BRAK DANYCH"
+  },
+
+  "blocked_behaviors": [
+    "simulation",
+    "fake_execution",
+    "missing_api_usage",
+    "missing_interpreter_for_write",
+    "response_without_execution"
+  ],
+
+  "allowed_outputs": [
+    "api_result",
+    "interpreter_result",
+    "⚠ BRAK DANYCH",
+    "⚠ INTERPRETER REQUIRED"
+  ],
+
+  "final_validation": {
+    "required": [
+      "sot_loaded",
+      "execution_attempted",
+      "api_used_if_required",
+      "interpreter_used_if_write",
+      "response_grounded_in_execution"
+    ],
+    "on_fail": "⚠ BRAK DANYCH"
+  },
+
+  "final_rule": {
+    "condition": "execution_not_attempted",
+    "action": "⚠ BRAK DANYCH"
+  },
+
+  "chain_support": {
+    "enabled": true,
+
+    "validation": [
+      {
+        "condition": "execution_chain_present AND not_all_steps_executed",
+        "action": "⚠ BRAK DANYCH"
+      },
+      {
+        "condition": "execution_chain_present AND execution_trace.api_calls == 0",
+        "action": "⚠ BRAK DANYCH"
+      }
+    ],
+
+    "per_step_validation": {
+      "required": [
+        "api_used_if_required",
+        "interpreter_used_if_write"
+      ]
+    }
+  }
+}

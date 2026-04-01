@@ -1,0 +1,151 @@
+{
+  "id": "param_extraction",
+  "version": "1.0",
+  "type": "parameter_resolver",
+
+  "strategy": {
+    "method": "regex_first",
+    "fallback": "context_memory",
+    "on_fail": "MISSING_PARAM"
+  },
+
+  "defaults": {
+    "owner": "adrian1520",
+    "repo": "gpt-os-main"
+  },
+
+  "rules": [
+
+    {
+      "param": "path",
+      "regex": "(?:plik|file|ścieżka)\\s+([\\w\\-/\\.]+)",
+      "examples": [
+        "plik README.md",
+        "file src/index.js"
+      ]
+    },
+
+    {
+      "param": "ref",
+      "regex": "(?:commit|branch)\\s+([\\w\\-/]+)",
+      "examples": [
+        "commit main",
+        "branch dev"
+      ]
+    },
+
+    {
+      "param": "branch",
+      "regex": "branch(?:u)?\\s+([\\w\\-]+)",
+      "examples": [
+        "na branchu main"
+      ]
+    },
+
+    {
+      "param": "run_id",
+      "regex": "run\\s+(\\d+)",
+      "type": "int"
+    },
+
+    {
+      "param": "pull_number",
+      "regex": "(?:pr|pull)\\s+(\\d+)",
+      "type": "int"
+    },
+
+    {
+      "param": "issue_number",
+      "regex": "issue\\s+(\\d+)",
+      "type": "int"
+    },
+
+    {
+      "param": "workflow_id",
+      "regex": "workflow\\s+([\\w\\-\\.]+)"
+    },
+
+    {
+      "param": "event_type",
+      "regex": "event\\s+([\\w\\-\\.]+)"
+    },
+
+    {
+      "param": "base",
+      "regex": "base\\s+([\\w\\-\\/]+)"
+    },
+
+    {
+      "param": "head",
+      "regex": "head\\s+([\\w\\-\\/]+)"
+    },
+
+    {
+      "param": "title",
+      "regex": "title\\s+\"([^\"]+)\""
+    },
+
+    {
+      "param": "body",
+      "regex": "body\\s+\"([^\"]+)\""
+    },
+
+    {
+      "param": "message",
+      "regex": "message\\s+\"([^\"]+)\""
+    }
+
+  ],
+
+  "post_processing": {
+
+    "type_casting": {
+      "run_id": "int",
+      "pull_number": "int",
+      "issue_number": "int"
+    },
+
+    "normalization": [
+      "trim_whitespace",
+      "lowercase_optional"
+    ]
+  },
+
+  "validation": {
+
+    "required_params_check": true,
+
+    "on_missing": {
+      "mode": "strict",
+      "action": "⚠ BRAK DANYCH"
+    }
+  },
+
+  "memory_fallback": {
+
+    "enabled": true,
+
+    "sources": [
+      "memory/state/last_state.json",
+      "memory/cache/last_output.json"
+    ],
+
+    "rules": [
+      "use_if_param_missing",
+      "never_override_explicit"
+    ]
+  },
+
+  "security_rules": [
+
+    {
+      "param": "path",
+      "forbidden_patterns": [
+        "\\.\\.",
+        "^\\/"
+      ],
+      "on_violation": "⚠ BRAK DANYCH"
+    }
+
+  ]
+}

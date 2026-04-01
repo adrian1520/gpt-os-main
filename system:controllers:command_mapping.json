@@ -1,0 +1,183 @@
+{
+  "id": "command_mapping",
+  "version": "2.0",
+  "type": "intent_resolution",
+  "authority": "single_intent_source",
+
+  "principles": [
+    "routing_must_never_block_execution",
+    "intent_over_routing",
+    "no_direct_api_calls"
+  ],
+
+  "global_failure_rule": {
+    "condition": "sot_not_loaded",
+    "action": "⚠ BRAK DANYCH"
+  },
+
+  "boot_requirement": {
+    "before": "routing",
+    "steps": [
+      {
+        "type": "api",
+        "action": "getFileContent",
+        "params": {
+          "path": "memory/source_of_truth.json"
+        }
+      },
+      {
+        "type": "validate",
+        "check": "api_called"
+      },
+      {
+        "type": "validate",
+        "check": "api_success"
+      },
+      {
+        "type": "parse",
+        "target": "state"
+      }
+    ]
+  },
+
+  "core_flow": {
+    "sequence": [
+      "INTENT",
+      "RESOLVE",
+      "EXECUTE",
+      "VALIDATE"
+    ]
+  },
+
+  "intent_resolution": {
+
+    "primary": {
+      "rule": "intent_clear",
+      "actions": [
+        {
+          "type": "map_to_command",
+          "constraint": "must_resolve_to_command_contract"
+        }
+      ]
+    },
+
+    "fallback_resolution": {
+      "rule": "no_command_match",
+      "actions": [
+        {
+          "type": "map_to_command",
+          "name": "execute_fallback_api"
+        }
+      ]
+    },
+
+    "default_mapping": [
+
+      {
+        "intent_keywords": [
+          "repo",
+          "files",
+          "check",
+          "inspect",
+          "organize",
+          "start",
+          "continue",
+          "wracamy"
+        ],
+        "action": {
+          "type": "command",
+          "name": "list_repo"
+        }
+      },
+
+      {
+        "intent_keywords": [
+          "analyze",
+          "audit",
+          "scan",
+          "review"
+        ],
+        "action": {
+          "type": "command",
+          "name": "analyze_repo"
+        }
+      },
+
+      {
+        "intent_keywords": [
+          "debug",
+          "fix",
+          "napraw"
+        ],
+        "action": {
+          "type": "command",
+          "name": "debug_system"
+        }
+      },
+
+      {
+        "intent_keywords": [
+          "read file",
+          "czytaj plik",
+          "open file"
+        ],
+        "action": {
+          "type": "command",
+          "name": "read_file"
+        }
+      },
+
+      {
+        "intent_keywords": [
+          "write file",
+          "zapisz plik",
+          "update file"
+        ],
+        "action": {
+          "type": "command",
+          "name": "write_file"
+        }
+      }
+    ]
+  },
+
+  "routing": {
+    "role": "secondary",
+    "used_if": "intent_unclear",
+    "on_no_match": "execute_fallback_api"
+  },
+
+  "execution_rule": {
+    "condition": "command_resolved",
+    "action": "execute_immediately",
+    "constraints": [
+      "no_direct_api",
+      "no_bypass_contract"
+    ]
+  },
+
+  "write_rule": {
+    "condition": "write_detected",
+    "flow": [
+      "getFileContent",
+      "interpreter",
+      "createOrUpdateFile"
+    ],
+    "on_violation": "⚠ INTERPRETER REQUIRED"
+  },
+
+  "no_simulation_rule": {
+    "condition": "execution_not_attempted",
+    "action": "⚠ BRAK DANYCH"
+  },
+
+  "response_policy": {
+    "allowed": [
+      "api_result",
+      "interpreter_result",
+      "execution_based_explanation",
+      "⚠ BRAK DANYCH",
+      "⚠ INTERPRETER REQUIRED"
+    ]
+  }
+}

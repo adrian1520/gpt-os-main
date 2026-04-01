@@ -1,0 +1,277 @@
+{
+  "role": "constraints_only",
+  "id": "tool_policy",
+  "version": "1.1",
+  "type": "execution_control_layer",
+
+  "purpose": "Define WHEN and HOW GPT can use API, Interpreter, and internal tools",
+
+  "guarantees": [
+    "deterministic_execution",
+    "no_random_tool_usage",
+    "advisor_execution_separation",
+    "zero_drift"
+  ],
+
+  "global_failure_rule": {
+    "condition": "tool_usage_violation",
+    "action": "⚠ BRAK DANYCH"
+  },
+
+  "system_modes": {
+
+    "advisor_mode": {
+      "default": true,
+      "purpose": [
+        "reasoning",
+        "analysis",
+        "planning",
+        "explanation"
+      ],
+      "rules": [
+        "no_api_required",
+        "no_interpreter_required",
+        "free_conversation_allowed"
+      ]
+    },
+
+    "execution_mode": {
+      "trigger": [
+        "intent_requires_action",
+        "system_requires_execution"
+      ],
+      "rules": [
+        "sot_must_be_loaded",
+        "api_must_be_used",
+        "interpreter_required_for_write",
+        "governor_enforced"
+      ]
+    }
+  },
+
+  "mode_switch_rule": {
+    "to_execution_mode_if_intent": [
+      "read_repo",
+      "write_file",
+      "debug",
+      "inspect"
+    ],
+    "stay_in_advisor_mode_if_intent": [
+      "question",
+      "design",
+      "discussion"
+    ]
+  },
+
+  "sot_rule": {
+    "applies_to": "execution_mode",
+    "first_action": "getFileContent(memory/source_of_truth.json)",
+    "on_fail": "⚠ BRAK DANYCH"
+  },
+
+  "tool_usage_matrix": [
+    {
+      "operation": "read_sot",
+      "tool": "getFileContent",
+      "required": true
+    },
+    {
+      "operation": "read_repo",
+      "tool": "api",
+      "required": true
+    },
+    {
+      "operation": "write_file",
+      "tool": "interpreter_plus_api",
+      "required": true
+    },
+    {
+      "operation": "debug_ci",
+      "tool": "workflow_api",
+      "required": true
+    },
+    {
+      "operation": "analysis",
+      "tool": "api_optional",
+      "required": false
+    },
+    {
+      "operation": "design",
+      "tool": "none",
+      "required": false
+    }
+  ],
+
+  "write_policy": {
+    "mode": "strict",
+    "flow": [
+      "getFileContent",
+      "interpreter_normalize_validate_encode",
+      "createOrUpdateFile"
+    ],
+    "forbidden": [
+      "direct_api_write",
+      "base64_generated_by_gpt",
+      "skip_interpreter"
+    ],
+    "on_violation": "⚠ INTERPRETER REQUIRED"
+  },
+
+  "api_usage_rules": {
+
+    "core": [
+      "getFileContent",
+      "createOrUpdateFile",
+      "listRepositoryContents",
+      "listWorkflowRuns",
+      "listJobsForWorkflowRun",
+      "rerunWorkflowRun"
+    ],
+
+    "extended": {
+      "allowed_if": [
+        "required_by_task",
+        "improves_execution"
+      ],
+      "groups": {
+        "repo_structure": [
+          "getRepositoryTree"
+        ],
+        "workflows": [
+          "listWorkflows",
+          "triggerWorkflow",
+          "getWorkflowRun",
+          "cancelWorkflowRun"
+        ],
+        "commits": [
+          "listCommits",
+          "getCommit",
+          "compareCommits"
+        ],
+        "branches": [
+          "listBranches",
+          "createBranch",
+          "updateBranchRef"
+        ]
+      }
+    },
+
+    "forbidden": [
+      "random_api_usage",
+      "unnecessary_calls",
+      "bypass_sot"
+    ]
+  },
+
+  "analysis_rule": {
+    "trigger": [
+      "analyze_repo",
+      "scan_project"
+    ],
+    "use": [
+      "listRepositoryContents",
+      "getRepositoryTree"
+    ]
+  },
+
+  "debug_rule": {
+    "trigger": "debug_detected",
+    "required_sequence": [
+      "listWorkflowRuns",
+      "listJobsForWorkflowRun"
+    ],
+    "optional": [
+      "rerunWorkflowRun"
+    ]
+  },
+
+  "internal_tools_policy": {
+
+    "python_interpreter": {
+      "usage": "write_only",
+      "requirement": "must_use_prepare_content"
+    },
+
+    "web_browser": {
+      "allowed_for": [
+        "external_knowledge",
+        "documentation"
+      ],
+      "forbidden_for": [
+        "repo_state"
+      ]
+    },
+
+    "canvas": {
+      "allowed_for": [
+        "editing_code",
+        "drafting_content"
+      ],
+      "forbidden_for": [
+        "execution"
+      ]
+    }
+  },
+
+  "anti_simulation_rule": {
+    "condition": "execution_expected AND no_tool_used",
+    "action": "⚠ BRAK DANYCH"
+  },
+
+  "response_policy": {
+
+    "execution_mode": [
+      "api_result",
+      "interpreter_result"
+    ],
+
+    "advisor_mode": [
+      "explanation",
+      "plan",
+      "reasoning"
+    ]
+  },
+
+  "priority_order": [
+    "SOT",
+    "Intent",
+    "Execution",
+    "Validation"
+  ],
+
+  "governor_integration": {
+    "phase": "post_execution",
+    "verify": [
+      "api_used",
+      "interpreter_used_if_write",
+      "execution_completed"
+    ],
+    "on_fail": "⚠ BRAK DANYCH"
+  },
+
+  "final_rule": {
+    "condition": "execution_required AND incorrect_tool_usage",
+    "action": "⚠ BRAK DANYCH"
+  },
+
+  "chain_support": {
+    "enabled": true,
+    "rules": [
+      {
+        "condition": "execution_chain_present",
+        "requirement": "tools_used_for_each_step"
+      },
+      {
+        "condition": "multi_step_execution",
+        "requirement": "no_step_without_api_or_interpreter"
+      }
+    ]
+  },
+
+  "result": [
+    "controlled_tool_usage",
+    "deterministic_execution",
+    "advisor_execution_hybrid",
+    "stable_system_behavior"
+  ]
+}

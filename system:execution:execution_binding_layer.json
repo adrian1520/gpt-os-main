@@ -1,0 +1,147 @@
+{
+  "id": "execution_binding_layer",
+  "version": "2.0",
+  "type": "execution_resolver",
+
+  "role": "single_execution_entrypoint",
+
+  "input_contract": {
+    "intent": "string",
+    "parameters": "object_optional",
+    "plan": "optional",
+    "mode": "ADVISORY|EXECUTION|DEBUG"
+  },
+
+  "output_contract": {
+    "execution_chain": "array_of_commands",
+    "status": "READY|ERROR"
+  },
+
+  "flow": [
+    "normalize_input",
+    "split_intent",
+    "semantic_resolution",
+    "param_extraction",
+    "memory_injection",
+    "select_command",
+    "build_execution_chain",
+    "validate_chain",
+    "emit"
+  ],
+
+  "multi_step_resolution": {
+    "enabled": true,
+    "split_tokens": [
+      "→",
+      "->",
+      "then",
+      "następnie",
+      "i potem",
+      "and then"
+    ],
+    "max_steps": 5
+  },
+
+  "semantic_resolution": {
+    "enabled": true,
+    "scoring": {
+      "keyword_match": 2,
+      "pattern_match": 3,
+      "exact_phrase_bonus": 5
+    },
+    "threshold": 3,
+    "confidence_levels": {
+      "high": 6,
+      "medium": 3,
+      "low": 1
+    },
+    "on_fail": "⚠ BRAK DANYCH"
+  },
+
+  "operation_resolution": {
+    "enabled": true,
+    "source": "operation_mapping",
+    "inject_as": "operationId"
+  },
+
+  "param_extraction": {
+    "enabled": true,
+    "rules_source": "param_extraction.json",
+    "fallback_defaults": {
+      "owner": "adrian1520",
+      "repo": "gpt-os-main"
+    }
+  },
+
+  "memory_injection": {
+    "enabled": true,
+    "strategy": [
+      "read_memory(memory/state/last_state.json)",
+      "inject_if_missing"
+    ]
+  },
+
+  "resolve_rules": {
+    "priority": [
+      "plan.command",
+      "command_mapping",
+      "semantic_resolution"
+    ],
+    "constraints": [
+      "must_resolve_to_command",
+      "no_direct_api",
+      "no_freeform_execution"
+    ],
+    "fallback": "execute_fallback_api",
+    "on_fail": "⚠ BRAK DANYCH"
+  },
+
+  "command_selection": {
+    "logic": [
+      "if_command_found → use",
+      "else_if_operationId_resolved → execute_fallback_api",
+      "else → ⚠ BRAK DANYCH"
+    ]
+  },
+
+  "binding_rules": {
+    "require_contract": true,
+    "inject_parameters": true,
+    "validate_required_fields": true,
+    "on_fail": "⚠ BRAK DANYCH"
+  },
+
+  "chain_rules": {
+    "single_command_to_chain": true,
+    "multi_step_allowed": true,
+    "context_passing": {
+      "enabled": true,
+      "key": "previous_output"
+    },
+    "must_follow_contract": true
+  },
+
+  "execution_chain_builder": {
+    "mode": "deterministic",
+    "steps": [
+      "map_each_step_to_command",
+      "inject_params",
+      "attach_context_links"
+    ]
+  },
+
+  "validation": {
+    "checks": [
+      "no_empty_chain",
+      "all_commands_exist",
+      "all_params_valid"
+    ],
+    "on_fail": "⚠ BRAK DANYCH"
+  },
+
+  "global_rules": [
+    "NO_EXECUTION_WITHOUT_BINDING",
+    "ONLY_COMMAND_CONTRACT_ALLOWED",
+    "NO_DIRECT_API_CALLS"
+  ]
+}
