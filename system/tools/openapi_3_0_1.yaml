@@ -1,0 +1,391 @@
+openapi: 3.0.1
+info:
+  title: GPT-OS GitHub Controller API (FULL GPT-SAFE)
+  version: 21.0.0
+servers:
+  - url: https://api.github.com
+
+paths:
+
+  /repos/{owner}/{repo}:
+    get:
+      operationId: getRepository
+      summary: Get repository
+      parameters:
+        - { name: owner, in: path, required: true, schema: { type: string } }
+        - { name: repo, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: OK }
+
+  /repos/{owner}/{repo}/contents:
+    get:
+      operationId: listRepositoryContents
+      summary: List contents
+      parameters:
+        - { name: owner, in: path, required: true, schema: { type: string } }
+        - { name: repo, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: OK }
+
+  /repos/{owner}/{repo}/contents/{path}:
+    get:
+      operationId: getFileContent
+      summary: Read file
+      parameters:
+        - { name: owner, in: path, required: true, schema: { type: string } }
+        - { name: repo, in: path, required: true, schema: { type: string } }
+        - { name: path, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: OK }
+
+    put:
+      operationId: createOrUpdateFile
+      summary: Write file
+      parameters:
+        - { name: owner, in: path, required: true, schema: { type: string } }
+        - { name: repo, in: path, required: true, schema: { type: string } }
+        - { name: path, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [message, content]
+              properties:
+                message: { type: string }
+                content: { type: string }
+                sha: { type: string }
+                branch: { type: string }
+      responses:
+        "200": { description: Updated }
+        "201": { description: Created }
+
+    delete:
+      operationId: deleteFile
+      summary: Delete file
+      parameters:
+        - { name: owner, in: path, required: true, schema: { type: string } }
+        - { name: repo, in: path, required: true, schema: { type: string } }
+        - { name: path, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [message, sha]
+              properties:
+                message: { type: string }
+                sha: { type: string }
+      responses:
+        "200": { description: Deleted }
+
+  /repos/{owner}/{repo}/git/trees/{tree_sha}:
+    get:
+      operationId: getRepositoryTree
+      summary: Get repo tree
+      parameters:
+        - { name: owner, in: path, required: true, schema: { type: string } }
+        - { name: repo, in: path, required: true, schema: { type: string } }
+        - { name: tree_sha, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: OK }
+
+  /repos/{owner}/{repo}/commits:
+    get:
+      operationId: listCommits
+      summary: List commits
+      parameters:
+        - { name: owner, in: path, required: true, schema: { type: string } }
+        - { name: repo, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: OK }
+
+  /repos/{owner}/{repo}/commits/{ref}:
+    get:
+      operationId: getCommit
+      summary: Get commit
+      parameters:
+        - { name: owner, in: path, required: true, schema: { type: string } }
+        - { name: repo, in: path, required: true, schema: { type: string } }
+        - { name: ref, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: OK }
+
+  /repos/{owner}/{repo}/compare/{base}...{head}:
+    get:
+      operationId: compareCommits
+      summary: Compare commits
+      parameters:
+        - { name: owner, in: path, required: true, schema: { type: string } }
+        - { name: repo, in: path, required: true, schema: { type: string } }
+        - { name: base, in: path, required: true, schema: { type: string } }
+        - { name: head, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: OK }
+
+  /repos/{owner}/{repo}/branches:
+    get:
+      operationId: listBranches
+      summary: List branches
+      parameters:
+        - { name: owner, in: path, required: true, schema: { type: string } }
+        - { name: repo, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: OK }
+
+  /repos/{owner}/{repo}/git/refs:
+    post:
+      operationId: createBranch
+      summary: Create branch
+      parameters:
+        - { name: owner, in: path, required: true, schema: { type: string } }
+        - { name: repo, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ref, sha]
+              properties:
+                ref: { type: string }
+                sha: { type: string }
+      responses:
+        "201": { description: Created }
+
+  /repos/{owner}/{repo}/git/refs/heads/{branch}:
+    patch:
+      operationId: updateBranchRef
+      summary: Update branch
+      parameters:
+        - { name: owner, in: path, required: true, schema: { type: string } }
+        - { name: repo, in: path, required: true, schema: { type: string } }
+        - { name: branch, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sha]
+              properties:
+                sha: { type: string }
+      responses:
+        "200": { description: Updated }
+
+    delete:
+      operationId: deleteBranch
+      summary: Delete branch
+      parameters:
+        - { name: owner, in: path, required: true, schema: { type: string } }
+        - { name: repo, in: path, required: true, schema: { type: string } }
+        - { name: branch, in: path, required: true, schema: { type: string } }
+      responses:
+        "204": { description: Deleted }
+
+  /repos/{owner}/{repo}/pulls:
+    get:
+      operationId: listPullRequests
+      summary: List PRs
+      parameters:
+        - { name: owner, in: path, required: true, schema: { type: string } }
+        - { name: repo, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: OK }
+
+    post:
+      operationId: createPullRequest
+      summary: Create PR
+      parameters:
+        - { name: owner, in: path, required: true, schema: { type: string } }
+        - { name: repo, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, head, base]
+              properties:
+                title: { type: string }
+                head: { type: string }
+                base: { type: string }
+                body: { type: string }
+      responses:
+        "201": { description: Created }
+
+  /repos/{owner}/{repo}/pulls/{pull_number}:
+    get:
+      operationId: getPullRequest
+      summary: Get PR
+      parameters:
+        - { name: owner, in: path, required: true, schema: { type: string } }
+        - { name: repo, in: path, required: true, schema: { type: string } }
+        - { name: pull_number, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200": { description: OK }
+
+  /repos/{owner}/{repo}/pulls/{pull_number}/merge:
+    put:
+      operationId: mergePullRequest
+      summary: Merge PR
+      parameters:
+        - { name: owner, in: path, required: true, schema: { type: string } }
+        - { name: repo, in: path, required: true, schema: { type: string } }
+        - { name: pull_number, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200": { description: Merged }
+
+  /repos/{owner}/{repo}/issues:
+    get:
+      operationId: listIssues
+      summary: List issues
+      parameters:
+        - { name: owner, in: path, required: true, schema: { type: string } }
+        - { name: repo, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: OK }
+
+    post:
+      operationId: createIssue
+      summary: Create issue
+      parameters:
+        - { name: owner, in: path, required: true, schema: { type: string } }
+        - { name: repo, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                title: { type: string }
+                body: { type: string }
+      responses:
+        "201": { description: Created }
+
+  /repos/{owner}/{repo}/issues/{issue_number}/comments:
+    post:
+      operationId: createIssueComment
+      summary: Comment issue
+      parameters:
+        - { name: owner, in: path, required: true, schema: { type: string } }
+        - { name: repo, in: path, required: true, schema: { type: string } }
+        - { name: issue_number, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [body]
+              properties:
+                body: { type: string }
+      responses:
+        "201": { description: Created }
+
+  /repos/{owner}/{repo}/actions/workflows:
+    get:
+      operationId: listWorkflows
+      summary: List workflows
+      parameters:
+        - { name: owner, in: path, required: true, schema: { type: string } }
+        - { name: repo, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: OK }
+
+  /repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches:
+    post:
+      operationId: triggerWorkflow
+      summary: Trigger workflow
+      parameters:
+        - { name: owner, in: path, required: true, schema: { type: string } }
+        - { name: repo, in: path, required: true, schema: { type: string } }
+        - { name: workflow_id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ref]
+              properties:
+                ref: { type: string }
+      responses:
+        "204": { description: Triggered }
+
+  /repos/{owner}/{repo}/actions/runs:
+    get:
+      operationId: listWorkflowRuns
+      summary: List runs
+      parameters:
+        - { name: owner, in: path, required: true, schema: { type: string } }
+        - { name: repo, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: OK }
+
+  /repos/{owner}/{repo}/actions/runs/{run_id}:
+    get:
+      operationId: getWorkflowRun
+      summary: Get run
+      parameters:
+        - { name: owner, in: path, required: true, schema: { type: string } }
+        - { name: repo, in: path, required: true, schema: { type: string } }
+        - { name: run_id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200": { description: OK }
+
+  /repos/{owner}/{repo}/actions/runs/{run_id}/jobs:
+    get:
+      operationId: listJobsForWorkflowRun
+      summary: List jobs
+      parameters:
+        - { name: owner, in: path, required: true, schema: { type: string } }
+        - { name: repo, in: path, required: true, schema: { type: string } }
+        - { name: run_id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200": { description: OK }
+
+  /repos/{owner}/{repo}/actions/runs/{run_id}/rerun:
+    post:
+      operationId: rerunWorkflowRun
+      summary: Rerun workflow
+      parameters:
+        - { name: owner, in: path, required: true, schema: { type: string } }
+        - { name: repo, in: path, required: true, schema: { type: string } }
+        - { name: run_id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "201": { description: Rerun }
+
+  /repos/{owner}/{repo}/actions/runs/{run_id}/cancel:
+    post:
+      operationId: cancelWorkflowRun
+      summary: Cancel workflow
+      parameters:
+        - { name: owner, in: path, required: true, schema: { type: string } }
+        - { name: repo, in: path, required: true, schema: { type: string } }
+        - { name: run_id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "202": { description: Cancelled }
+
+  /repos/{owner}/{repo}/dispatches:
+    post:
+      operationId: repositoryDispatch
+      summary: Dispatch event
+      parameters:
+        - { name: owner, in: path, required: true, schema: { type: string } }
+        - { name: repo, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [event_type]
+              properties:
+                event_type: { type: string }
+      responses:
+        "204": { description: OK }
