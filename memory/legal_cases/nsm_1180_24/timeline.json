@@ -1,1 +1,8 @@
-[]
+[
+  {
+    "id": 1,
+    "date": "2026-04-02",
+    "type": "document_added",
+    "ref": "001_pozew.pdf"
+  }
+]
