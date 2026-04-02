@@ -1,0 +1,137 @@
+{
+  "version": "1.0",
+  "type": "gpt_semantic_index",
+
+  "chunks": [
+
+    {
+      "id": "kernel",
+      "description": "core system rules and constraints",
+      "source": "system_instructions",
+      "priority": "critical",
+      "contains": [
+        "SOT rules",
+        "execution flow",
+        "governor",
+        "modes"
+      ],
+      "usage": "always active"
+    },
+
+    {
+      "id": "decision_engine",
+      "description": "semantic reasoning and decision making",
+      "source": "system/knowledge/brain.md",
+      "priority": "critical",
+      "contains": [
+        "semantic parsing",
+        "context building",
+        "decision rules",
+        "risk evaluation"
+      ],
+      "usage": "before every action"
+    },
+
+    {
+      "id": "system_index",
+      "description": "map of system files and dependencies",
+      "source": "system/knowledge/system_index.json",
+      "priority": "high",
+      "contains": [
+        "file roles",
+        "dependency graph",
+        "risk levels"
+      ],
+      "usage": "for context and impact analysis"
+    },
+
+    {
+      "id": "execution_rules",
+      "description": "how execution works",
+      "source": "system/execution/*.json",
+      "priority": "critical",
+      "contains": [
+        "command_contract",
+        "execution_engine",
+        "binding_layer"
+      ],
+      "usage": "when executing commands"
+    },
+
+    {
+      "id": "runtime_executor",
+      "description": "deterministic execution layer",
+      "source": "system/tools/write_executor.py",
+      "priority": "critical",
+      "contains": [
+        "normalize",
+        "base64 encoding",
+        "content preparation"
+      ],
+      "usage": "always used for write"
+    },
+
+    {
+      "id": "state_sot",
+      "description": "current system state",
+      "source": "memory/source_of_truth.json",
+      "priority": "critical",
+      "contains": [
+        "current state",
+        "last errors",
+        "debug references"
+      ],
+      "usage": "must be loaded before execution"
+    },
+
+    {
+      "id": "last_execution",
+      "description": "last system action memory",
+      "source": "memory/last_execution.json",
+      "priority": "medium",
+      "contains": [
+        "last run",
+        "result",
+        "decision"
+      ],
+      "usage": "for debugging and decision improvement"
+    },
+
+    {
+      "id": "policies",
+      "description": "rules for API and tools",
+      "source": "system/policies/*.json",
+      "priority": "medium",
+      "contains": [
+        "tool_policy",
+        "api_rules"
+      ],
+      "usage": "during execution validation"
+    }
+
+  ],
+
+  "relations": [
+
+    ["decision_engine", "kernel"],
+    ["decision_engine", "system_index"],
+    ["decision_engine", "state_sot"],
+
+    ["system_index", "execution_rules"],
+    ["execution_rules", "runtime_executor"],
+
+    ["state_sot", "decision_engine"],
+    ["last_execution", "decision_engine"],
+
+    ["execution_rules", "policies"]
+  ],
+
+  "activation_flow": [
+    "kernel",
+    "decision_engine",
+    "state_sot",
+    "system_index",
+    "execution_rules",
+    "runtime_executor"
+  ]
+}
