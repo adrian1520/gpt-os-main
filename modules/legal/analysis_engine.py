@@ -1,17 +1,20 @@
 import json
 import os
 from datetime import datetime
+from modules.legal.document_parser import load_documents, extract_facts_from_documents
 
 RUNTIME_PATH = "memory/legal_runtime"
 KNOWLEDGE_PATH = "memory/legal_knowledge"
 CASES_PATH = "memory/legal_cases"
 
+
 def load_knowledge():
     with open(f"{KNOWLEDGE_PATH}/kro.json") as f:
         return json.load(f)
 
+
 def extract_facts(case_id):
-    folder = case_id.replace("/", "_")
+    folder = case_id.replace("/", "_"
     path = os.path.join(CASES_PATH, folder)
 
     facts = {
@@ -22,20 +25,18 @@ def extract_facts(case_id):
         "activity_level": "low"
     }
 
-    # metadata
     metadata_path = os.path.join(path, "metadata.json")
     if os.path.exists(metadata_path):
         with open(metadata_path) as f:
             metadata = json.load(f)
             facts["case_type"] = metadata.get("type")
 
-    # timeline
     timeline_path = os.path.join(path, "timeline.json")
-
     if os.path.exists(timeline_path):
         with open(timeline_path) as f:
             timeline = json.load(f)
             count = len(timeline)
+
             facts["events_count"] = count
 
             if count > 0:
@@ -49,56 +50,27 @@ def extract_facts(case_id):
 
     return facts
 
+
 def run_analysis(case_id):
     knowledge = load_knowledge()
     facts = extract_facts(case_id)
 
+    documents = load_documents(case_id)
+    document_facts = extract_facts_from_documents(documents)
+
     legal_basis = list(knowledge.keys())
-
-    risks = []
-    strategy = []
-
-    # logika bazelowa
-    if not facts["has_initial_document"]:
-        risks.append({
-            "type": "brak_pozwu",
-            "severity": "high",
-            "description": "Brak poczatkowego pisma"
-        })
-        strategy.append({
-            "action": "zloazenia pozdwu",
-            "priority": "high"
-        })
-
-    if facts["activity_level"] == "low":
-        strategy.append({
-            "action": "zwiekszyc aktywnosc sprawy",
-            "priority": "medium"
-        })
 
     snapshot = {
         "case_id": case_id,
         "timestamp": datetime.utcnow().isoformat(),
         "facts": facts,
-        "process_position": {
-            "role": "unknown",
-            "strength": "weak",
-            "score": 0.3
-        },
-        "risks": risks,
-        "strategy": strategy,
-        "legal_basis": legal_basis,
-        "procedural_compliance": {
-            "status": facts["has_documents"],
-            "issues": [] if facts["has_documents"] or ["brak dokumentów"]
-        },
-        "next_steps": [
-            "upelnienia akt sprawy"
-        ]
+        "document_facts": document_facts,
+        "legal_basis": legal_basis
     }
 
     save_snapshot(case_id, snapshot)
     return snapshot
+
 
 def save_snapshot(case_id, snapshot):
     folder = case_id.replace("/", "_")
