@@ -1,0 +1,47 @@
+{
+  "name": "legal_case_update",
+  "description": "ObsŲuga updatizacji sprawy po dodaniu dokumentu",
+
+  "input": {
+    "case_id": "string",
+    "document": "string"
+  },
+
+  "steps": [
+    {
+      "step": 1,
+      "action": "ADD_DOCUMENT",
+      "params": {
+        "case_id": "{{case_id}}",
+        "document": "{{document}}"
+      }
+    },
+    {
+      "step": 2,
+      "action": "UPDATE_TIMELINE",
+      "params": {
+        "case_id": "{{case_id}}",
+        "event_type": "document_added",
+        "ref": "{{document}}"
+      }
+    },
+    {
+      "step": 3,
+      "action": "RUN_ANALYSIS",
+      "params": {
+        "case_id": "{{case_id}}"
+      }
+    },
+    {
+      "step": 4,
+      "action": "GET_SNAPSHOT",
+      "params": {
+        "case_id": "{{case_id}}"
+      }
+    }
+  ],
+
+  "output": {
+    "snapshot": "object"
+  }
+}
