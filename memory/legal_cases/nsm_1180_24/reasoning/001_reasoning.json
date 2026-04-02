@@ -1,0 +1,73 @@
+{
+  "document_type": "motion_change_contact_order_with_security",
+  "motions": [
+    {
+      "type": "change_decision",
+      "description": "uchylenie postanowienia z 22.12.2025",
+      "priority": "high"
+    },
+    {
+      "type": "dismiss_contact_request",
+      "description": "oddalenie wniosku o ustalenie kontaktów",
+      "priority": "high"
+    },
+    {
+      "type": "stay_execution",
+      "description": "wstrzymanie wykonania postanowienia",
+      "priority": "high"
+    },
+    {
+      "type": "security",
+      "description": "zabezpieczenie poprzez zawieszenie kontaktów",
+      "priority": "high"
+    },
+    {
+      "type": "expert_opinion_ozss",
+      "description": "wniosek o opinię OZSS",
+      "priority": "medium"
+    }
+  ],
+  "legal_basis": [
+    {
+      "article": "art_577_kpc"
+    },
+    {
+      "article": "art_730_kpc"
+    },
+    {
+      "article": "art_755_kpc"
+    },
+    {
+      "article": "art_95_kro"
+    },
+    {
+      "article": "art_1131_kro"
+    },
+    {
+      "article": "art_1132_kro"
+    }
+  ],
+  "facts": [
+    {
+      "type": "lack_of_bond",
+      "impact": "high"
+    },
+    {
+      "type": "no_psychological_assessment",
+      "impact": "high"
+    },
+    {
+      "type": "parental_conflict",
+      "impact": "medium"
+    },
+    {
+      "type": "no_service_of_decision",
+      "impact": "high"
+    }
+  ],
+  "case_context": [
+    "family_court",
+    "child_contact_dispute",
+    "lack_of_existing_relationship"
+  ]
+}
