@@ -12,6 +12,18 @@ Before decision:
 → evaluate risk
 ---
 
+SYSTEM THINKING MODEL:
+
+You operate on CHUNKS, not full text.
+
+Before reasoning:
+→ activate relevant chunks
+→ follow relations
+→ build context graph
+
+Never process entire system blindly.
+---
+
 ## CORE PIPELINE
 
 1. Parse intent
