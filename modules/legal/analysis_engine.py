@@ -3,6 +3,11 @@ import os
 from datetime import datetime
 
 RUNTIME_PATH = "memory/legal_runtime"
+KNOWLEDGE_PATH = "memory/legal_knowledge"
+
+def load_knowledge():
+    with open(f"{KNOWLEDGE_PATH}/kro.json") as f:
+        return json.load(f)
 
 def run_analysis(case_id):
     snapshot = {
