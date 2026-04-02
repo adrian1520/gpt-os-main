@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 from modules.legal.document_parser import load_documents, extract_facts_from_documents
 from modules.legal.reasoning_loader import load_reasoning
+from modules.legal.strategy_engine import build_strategy
 
 RUNTIME_PATH = "memory/legal_runtime"
 KNOWLEDGE_PATH = "memory/legal_knowledge"
@@ -72,12 +73,15 @@ def run_analysis(case_id):
         "legal_basis": legal_basis
     }
 
+    strategy = build_strategy(snapshot)
+    snapshot["strategy"] = strategy
+
     save_snapshot(case_id, snapshot)
     return snapshot
 
 
 def save_snapshot(case_id, snapshot):
-    folder = case_id.replace("/", "_"
+    folder = case_id.replace("/", "_")
     path = os.path.join(RUNTIME_PATH, folder)
     os.makedirs(path, exist_ok=True)
 
