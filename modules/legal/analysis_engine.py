@@ -2,6 +2,7 @@ import json
 import os
 from datetime import datetime
 from modules.legal.document_parser import load_documents, extract_facts_from_documents
+from modules.legal.reasoning_loader import load_reasoning
 
 RUNTIME_PATH = "memory/legal_runtime"
 KNOWLEDGE_PATH = "memory/legal_knowledge"
@@ -14,7 +15,7 @@ def load_knowledge():
 
 
 def extract_facts(case_id):
-    folder = case_id.replace("/", "_"
+    folder = case_id.replace("/", "_")
     path = os.path.join(CASES_PATH, folder)
 
     facts = {
@@ -58,6 +59,8 @@ def run_analysis(case_id):
     documents = load_documents(case_id)
     document_facts = extract_facts_from_documents(documents)
 
+    reasoning_data = load_reasoning(case_id)
+
     legal_basis = list(knowledge.keys())
 
     snapshot = {
@@ -65,6 +68,7 @@ def run_analysis(case_id):
         "timestamp": datetime.utcnow().isoformat(),
         "facts": facts,
         "document_facts": document_facts,
+        "reasoning": reasoning_data,
         "legal_basis": legal_basis
     }
 
@@ -73,7 +77,7 @@ def run_analysis(case_id):
 
 
 def save_snapshot(case_id, snapshot):
-    folder = case_id.replace("/", "_")
+    folder = case_id.replace("/", "_"
     path = os.path.join(RUNTIME_PATH, folder)
     os.makedirs(path, exist_ok=True)
 
