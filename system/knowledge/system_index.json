@@ -1,0 +1,171 @@
+{
+  "version": "1.0",
+  "type": "system_index",
+
+  "layers": {
+    "core": {
+      "description": "bootstrap and global rules",
+      "files": [
+        {
+          "path": "system/core/bootstrap.json",
+          "role": "system_bootstrap",
+          "risk": "high",
+          "depends_on": [],
+          "affects": ["execution", "governor", "modes"]
+        }
+      ]
+    },
+
+    "execution": {
+      "description": "command execution system",
+      "files": [
+        {
+          "path": "system/execution/command_contract.json",
+          "role": "execution_contract",
+          "risk": "high",
+          "depends_on": ["bootstrap"],
+          "affects": ["write_file", "read_file", "execution_flow"]
+        },
+        {
+          "path": "system/execution/execution_engine.json",
+          "role": "execution_engine",
+          "risk": "high",
+          "depends_on": ["command_contract"],
+          "affects": ["all_commands"]
+        },
+        {
+          "path": "system/execution/execution_binding_layer.json",
+          "role": "binding_layer",
+          "risk": "medium",
+          "depends_on": ["command_mapping"],
+          "affects": ["command_resolution"]
+        },
+        {
+          "path": "system/execution/param_extraction.json",
+          "role": "parameter_resolution",
+          "risk": "low",
+          "depends_on": [],
+          "affects": ["command_inputs"]
+        }
+      ]
+    },
+
+    "controllers": {
+      "description": "intent and routing logic",
+      "files": [
+        {
+          "path": "system/controllers/command_mapping.json",
+          "role": "intent_to_command",
+          "risk": "medium",
+          "depends_on": [],
+          "affects": ["command_selection"]
+        },
+        {
+          "path": "system/controllers/semantic_routes.json",
+          "role": "semantic_routing",
+          "risk": "medium",
+          "depends_on": ["command_mapping"],
+          "affects": ["intent_resolution"]
+        },
+        {
+          "path": "system/controllers/reasoning_engine.json",
+          "role": "reasoning_logic",
+          "risk": "low",
+          "depends_on": [],
+          "affects": ["analysis_mode"]
+        }
+      ]
+    },
+
+    "tools": {
+      "description": "deterministic execution layer",
+      "files": [
+        {
+          "path": "system/tools/write_executor.py",
+          "role": "content_transform",
+          "risk": "high",
+          "depends_on": [],
+          "affects": ["write_file_encoding"]
+        }
+      ]
+    },
+
+    "policies": {
+      "description": "rules and constraints",
+      "files": [
+        {
+          "path": "system/policies/tool_policy.json",
+          "role": "tool_rules",
+          "risk": "medium",
+          "depends_on": [],
+          "affects": ["tool_usage"]
+        },
+        {
+          "path": "system/policies/rules_api.json",
+          "role": "api_rules",
+          "risk": "medium",
+          "depends_on": [],
+          "affects": ["api_execution"]
+        }
+      ]
+    },
+
+    "memory": {
+      "description": "state and logs",
+      "files": [
+        {
+          "path": "memory/source_of_truth.json",
+          "role": "system_state",
+          "risk": "critical",
+          "depends_on": [],
+          "affects": ["entire_system"]
+        },
+        {
+          "path": "memory/debug/",
+          "role": "debug_logs",
+          "risk": "low",
+          "depends_on": [],
+          "affects": ["audit", "debug"]
+        }
+      ]
+    },
+
+    "knowledge": {
+      "description": "LLM guidance layer",
+      "files": [
+        {
+          "path": "system/knowledge/brain.md",
+          "role": "decision_engine",
+          "risk": "medium",
+          "depends_on": ["system_index"],
+          "affects": ["decision_making"]
+        },
+        {
+          "path": "system/knowledge/system_index.json",
+          "role": "system_map",
+          "risk": "medium",
+          "depends_on": [],
+          "affects": ["context_building", "dependency_graph"]
+        }
+      ]
+    }
+  },
+
+  "dependency_graph": [
+    ["bootstrap", "command_contract"],
+    ["command_contract", "execution_engine"],
+    ["command_mapping", "binding_layer"],
+    ["binding_layer", "execution"],
+    ["execution_engine", "write_executor"],
+    ["write_executor", "github_api"],
+    ["execution", "governor"],
+    ["sot", "entire_system"]
+  ],
+
+  "risk_levels": {
+    "low": "safe read or isolated logic",
+    "medium": "affects behavior but not core execution",
+    "high": "affects execution pipeline",
+    "critical": "affects entire system state"
+  }
+}
