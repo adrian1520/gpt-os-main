@@ -1,0 +1,17 @@
+{
+  "case_id": "nsm_1180/24",
+  "timestamp": null,
+  "process_position": {
+    "role": null,
+    "strength": "unknown",
+    "score": 0
+  },
+  "risks": [],
+  "strategy": [],
+  "legal_basis": [],
+  "procedural_compliance": {
+    "status": null,
+    "issues": []
+  },
+  "next_steps": []
+}
