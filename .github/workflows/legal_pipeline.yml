@@ -1,0 +1,43 @@
+name: Legal Pipeline
+
+on:
+  push:
+    paths:
+      - 'memory/legal_cases/**'
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Detect changed cases
+        id: detect
+        run: |
+          FILES=(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
+
+          CASES=$(echo "$FILES" | grep -o 'memory/legal_cases/[^/]*' | cut -d'/' -f3 | sort | uniq)
+
+          echo "cases=$CASES" >> $GITHUB_OUTPUT
+
+      - name: Run analysis for each case
+        run: |
+          for case in ${{ steps.detect.outputs.cases }}
+          do
+            echo "Processing $case"
+            python -c "
+from modules.legal.analysis_engine import run_analysis
+run_analysis('$case')
+"
+          done
+
+      - name: Commit runtime
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+
+          git add memory/legal_runtime/
+          git commit -m "auto: update snapshots (multi-case)" || echo "No changes"
+          git push
