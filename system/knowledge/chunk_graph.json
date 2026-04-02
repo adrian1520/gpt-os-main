@@ -4,7 +4,8 @@
 
   "chunks": [
 
-"priority_weights": {
+    {
+  "priority_weights":
   "kernel": 10,
   "decision_engine": 10,
   "state_sot": 9,
@@ -12,7 +13,7 @@
   "execution_rules": 9,
   "runtime_executor": 9,
   "last_execution": 7
-}
+    }
 
     {
       "id": "kernel",
