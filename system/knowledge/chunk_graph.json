@@ -4,6 +4,16 @@
 
   "chunks": [
 
+"priority_weights": {
+  "kernel": 10,
+  "decision_engine": 10,
+  "state_sot": 9,
+  "system_index": 8,
+  "execution_rules": 9,
+  "runtime_executor": 9,
+  "last_execution": 7
+}
+
     {
       "id": "kernel",
       "description": "core system rules and constraints",
@@ -135,3 +145,36 @@
     "runtime_executor"
   ]
 }
+
+"activation_rules": [
+  {
+    "condition": "always",
+    "activate": ["kernel", "decision_engine"]
+  },
+  {
+    "condition": "before_execution",
+    "activate": ["state_sot", "execution_rules", "runtime_executor"]
+  },
+  {
+    "condition": "file_modification",
+    "activate": ["system_index"]
+  },
+  {
+    "condition": "high_risk_change",
+    "activate": ["system_index", "execution_rules"]
+  },
+  {
+    "condition": "debug_mode",
+    "activate": ["state_sot", "last_execution"]
+  },
+  {
+    "condition": "unknown_context",
+    "activate": ["system_index", "state_sot"]
+  },
+  {
+    "condition": "design_mode",
+    "activate": ["system_index"]
+  }
+]
+
+
