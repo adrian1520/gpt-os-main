@@ -1,0 +1,9 @@
+{
+  "rules": [
+    {
+      "id": "DIVORCE_RULE",
+      "if": ["ziłpełny_rozkład"],
+      "then": ["art_56"]
+    }
+  ]
+}
