@@ -10,6 +10,10 @@ def load_knowledge():
         return json.load(f)
 
 def run_analysis(case_id):
+    knowledge = load_knowledge()
+
+    legal_basis = list(knowledge.keys())
+
     snapshot = {
         "case_id": case_id,
         "timestamp": datetime.utcnow().isoformat(),
@@ -18,14 +22,27 @@ def run_analysis(case_id):
             "strength": "weak",
             "score": 0.3
         },
-        "risks": [],
-        "strategy": [],
-        "legal_basis": [],
+        "risks": [
+            {
+                "type": "brak_dokumentáw",
+                "severity": "high",
+                "description": "Brak dokumentów wactach"
+            }
+        ],
+        "strategy": [
+            {
+                "action": "uzupiłnici akta",
+                "priority": "high"
+            }
+        ],
+        "legal_basis": legal_basis,
         "procedural_compliance": {
             "status": False,
-            "issues": []
+            "issues": ["brak danych"]
         },
-        "next_steps": []
+        "next_steps": [
+            "dodac pierwszy dokument"
+        ]
     }
 
     save_snapshot(case_id, snapshot)
