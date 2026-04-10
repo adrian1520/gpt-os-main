@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: execution_tool (GitHub API adapter runtime)
-  version: "1.1"
+  version: "1.2"
   description: >-
     GitHub REST adapter for GPTs Actions used as durable JSON storage
     (case graph, extracted pleadings, metadata, audit trail).
@@ -15,11 +15,34 @@ paths:
       description: >-
         Returns file metadata/content for files, or an array of directory items for folders.
       parameters:
-        - $ref: "#/components/parameters/OwnerParam"
-        - $ref: "#/components/parameters/RepoParam"
-        - $ref: "#/components/parameters/PathParam"
-        - $ref: "#/components/parameters/RefQuery"
-        - $ref: "#/components/parameters/AcceptHeader"
+        - name: owner
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: repo
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: path
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^[A-Za-z0-9._\-/]+$
+        - name: ref
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Branch name or commit SHA
+        - name: Accept
+          in: header
+          required: false
+          schema:
+            type: string
+            default: application/vnd.github+json
       responses:
         "200":
           description: File metadata/content or directory listing
@@ -41,15 +64,34 @@ paths:
           description: Internal server error
       security:
         - bearerAuth: []
+
     put:
       operationId: createOrUpdateFile
       summary: Create or update file in GitHub
       description: Requires sha when updating an existing file
       parameters:
-        - $ref: "#/components/parameters/OwnerParam"
-        - $ref: "#/components/parameters/RepoParam"
-        - $ref: "#/components/parameters/PathParam"
-        - $ref: "#/components/parameters/AcceptHeader"
+        - name: owner
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: repo
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: path
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^[A-Za-z0-9._\-/]+$
+        - name: Accept
+          in: header
+          required: false
+          schema:
+            type: string
+            default: application/vnd.github+json
       requestBody:
         required: true
         content:
@@ -83,15 +125,34 @@ paths:
           description: Internal server error
       security:
         - bearerAuth: []
+
     delete:
       operationId: deleteFile
       summary: Delete file in GitHub
       description: Deletes file at path (requires current blob sha).
       parameters:
-        - $ref: "#/components/parameters/OwnerParam"
-        - $ref: "#/components/parameters/RepoParam"
-        - $ref: "#/components/parameters/PathParam"
-        - $ref: "#/components/parameters/AcceptHeader"
+        - name: owner
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: repo
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: path
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^[A-Za-z0-9._\-/]+$
+        - name: Accept
+          in: header
+          required: false
+          schema:
+            type: string
+            default: application/vnd.github+json
       requestBody:
         required: true
         content:
@@ -125,8 +186,16 @@ paths:
       description: >-
         Use recursive=1 to fetch deep tree for folders/subfolders/files in a single call.
       parameters:
-        - $ref: "#/components/parameters/OwnerParam"
-        - $ref: "#/components/parameters/RepoParam"
+        - name: owner
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: repo
+          in: path
+          required: true
+          schema:
+            type: string
         - name: tree_sha
           in: path
           required: true
@@ -143,7 +212,12 @@ paths:
               - type: integer
                 enum: [1]
           description: Set to 1 for deep recursive listing
-        - $ref: "#/components/parameters/AcceptHeader"
+        - name: Accept
+          in: header
+          required: false
+          schema:
+            type: string
+            default: application/vnd.github+json
       responses:
         "200":
           description: Tree listing
@@ -165,8 +239,16 @@ paths:
       operationId: getBranchRef
       summary: Get branch reference (latest commit sha)
       parameters:
-        - $ref: "#/components/parameters/OwnerParam"
-        - $ref: "#/components/parameters/RepoParam"
+        - name: owner
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: repo
+          in: path
+          required: true
+          schema:
+            type: string
         - name: branch
           in: path
           required: true
@@ -193,8 +275,16 @@ paths:
       operationId: listCommits
       summary: List commits (history/audit for case updates)
       parameters:
-        - $ref: "#/components/parameters/OwnerParam"
-        - $ref: "#/components/parameters/RepoParam"
+        - name: owner
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: repo
+          in: path
+          required: true
+          schema:
+            type: string
         - name: sha
           in: query
           required: false
@@ -236,8 +326,16 @@ paths:
       operationId: compareRefs
       summary: Compare two refs (what changed between snapshots)
       parameters:
-        - $ref: "#/components/parameters/OwnerParam"
-        - $ref: "#/components/parameters/RepoParam"
+        - name: owner
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: repo
+          in: path
+          required: true
+          schema:
+            type: string
         - name: basehead
           in: path
           required: true
@@ -297,41 +395,6 @@ paths:
         - bearerAuth: []
 
 components:
-  parameters:
-    OwnerParam:
-      name: owner
-      in: path
-      required: true
-      schema:
-        type: string
-    RepoParam:
-      name: repo
-      in: path
-      required: true
-      schema:
-        type: string
-    PathParam:
-      name: path
-      in: path
-      required: true
-      schema:
-        type: string
-        pattern: ^[A-Za-z0-9._\-/]+$
-    RefQuery:
-      name: ref
-      in: query
-      required: false
-      schema:
-        type: string
-      description: Branch name or commit SHA
-    AcceptHeader:
-      name: Accept
-      in: header
-      required: false
-      schema:
-        type: string
-        default: application/vnd.github+json
-
   schemas:
     GitHubPutRequest:
       type: object
