@@ -709,6 +709,194 @@ components:
                   private:
                     type: boolean
 
+    ActorDetails:
+      type: object
+      required:
+        - id
+        - type
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [USER, COURT, SYSTEM]
+        role:
+          type: [string, "null"]
+          enum: [APPLICANT, JUDGE, LAWYER, SYSTEM, null]
+
+    CaseNode:
+      type: object
+      required: [id, type, data]
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [PERSON, DOCUMENT, EVENT, COURT, CLAIM]
+        data:
+          type: object
+
+    CaseEdge:
+      type: object
+      required: [from, to, type]
+      properties:
+        from:
+          type: string
+        to:
+          type: string
+        type:
+          type: string
+          enum: [RELATES_TO, CREATED_BY, INVOLVES, REFERS_TO]
+
+    CaseGraph:
+      type: object
+      required: [case_id, version, last_event, nodes, edges, meta, sha]
+      properties:
+        case_id:
+          type: string
+        version:
+          type: integer
+        last_event:
+          type: string
+        sha:
+          type: string
+        transaction_id:
+          type: [string, "null"]
+        locked_by:
+          type: [string, "null"]
+        nodes:
+          type: array
+          items:
+            $ref: "#/components/schemas/CaseNode"
+        edges:
+          type: array
+          items:
+            $ref: "#/components/schemas/CaseEdge"
+        meta:
+          type: object
+          required: [created_at, updated_at, status]
+          properties:
+            created_at:
+              type: string
+              format: date-time
+            updated_at:
+              type: string
+              format: date-time
+            status:
+              type: string
+              enum: [ACTIVE, CLOSED, SUSPENDED]
+        hash:
+          type: string
+
+    CaseEvent:
+      type: object
+      required:
+        - event_id
+        - type
+        - timestamp
+        - actor
+        - payload
+        - idempotency_key
+        - transaction_id
+        - actor_details
+      properties:
+        event_id:
+          type: string
+        type:
+          type: string
+          enum:
+            - CASE_CREATED
+            - DOCUMENT_ADDED
+            - DOCUMENT_UPDATED
+            - NODE_ADDED
+            - EDGE_ADDED
+            - STATUS_CHANGED
+        timestamp:
+          type: string
+          format: date-time
+        actor:
+          type: string
+          enum: [SYSTEM, USER, COURT]
+        actor_details:
+          $ref: "#/components/schemas/ActorDetails"
+        payload:
+          type: object
+          required: [doc_id]
+          properties:
+            doc_id:
+              type: string
+            type:
+              type: string
+            source:
+              type: string
+        prev_event:
+          type: [string, "null"]
+        idempotency_key:
+          type: string
+        transaction_id:
+          type: string
+        hash:
+          type: string
+
+    CaseDocument:
+      type: object
+      required:
+        - doc_id
+        - type
+        - content
+        - created_at
+        - idempotency_key
+        - transaction_id
+        - actor_details
+      properties:
+        doc_id:
+          type: string
+        type:
+          type: string
+          enum:
+            - WNIOSEK
+            - POSTANOWIENIE
+            - PISMO_PROCESOWE
+            - UZASADNIENIE
+            - DOWOD
+            - INNE
+        source:
+          type: string
+          enum: [COURT, USER, SYSTEM]
+        actor_details:
+          $ref: "#/components/schemas/ActorDetails"
+        content:
+          type: string
+        metadata:
+          type: object
+          properties:
+            signature:
+              type: string
+            date:
+              type: string
+              format: date
+        created_at:
+          type: string
+          format: date-time
+        idempotency_key:
+          type: string
+        transaction_id:
+          type: string
+        hash:
+          type: string
+
+    LegalCaseStorageEnvelope:
+      type: object
+      properties:
+        graph:
+          $ref: "#/components/schemas/CaseGraph"
+        event:
+          $ref: "#/components/schemas/CaseEvent"
+        document:
+          $ref: "#/components/schemas/CaseDocument"
+      minProperties: 1
+      maxProperties: 1
+
   securitySchemes:
     bearerAuth:
       type: http
