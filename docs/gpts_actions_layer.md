@@ -7,6 +7,7 @@ Ten projekt używa **GitHub REST API bez własnego backendu**. GPT wykonuje tylk
 Wgraj plik OpenAPI:
 - `schemas/github_gpts_actions_openapi.yaml`
 - Helper runtime (Python, opcjonalny): `tools/gpts_runtime_helper.py`
+- Instrukcja kernela runtime (prompt/system): `docs/runtime_kernel_instruction.md`
 
 Użyj PAT z zakresem:
 - repo (private repo: pełny `repo`; public repo: `public_repo` może wystarczyć)
