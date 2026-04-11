@@ -1,0 +1,211 @@
+{
+  "pipeline": "AUTO_PIPELINE",
+  "version": "1.8",
+  "mode": "WRITE",
+  "input": {
+    "type": "document",
+    "required_fields": ["doc_id", "content"]
+  },
+  "context": {
+    "base_path": "cases/{case_id}",
+    "graph_path": "cases/{case_id}/graph.json",
+    "events_path": "cases/{case_id}/events/",
+    "documents_path": "cases/{case_id}/documents/"
+  },
+  "steps": [
+    {
+      "id": "step_1",
+      "name": "load_graph",
+      "action": "getFileOrDirectory",
+      "params": {
+        "path": "{graph_path}"
+      },
+      "output": "graph_file"
+    },
+    {
+      "id": "step_2",
+      "name": "decode_graph",
+      "action": "decode_base64",
+      "input": "graph_file.content",
+      "output": "graph"
+    },
+    {
+      "id": "step_3",
+      "name": "extract_sha",
+      "action": "extract_field",
+      "input": "graph_file.sha",
+      "output": "sha"
+    },
+    {
+      "id": "step_4",
+      "name": "generate_idempotency",
+      "action": "hash",
+      "input": "input.content",
+      "output": "idempotency_key"
+    },
+    {
+      "id": "step_4b",
+      "name": "generate_transaction_id",
+      "action": "generate_txn_id",
+      "output": "transaction_id"
+    },
+    {
+      "id": "step_4c",
+      "name": "check_idempotency",
+      "action": "searchCode",
+      "params": {
+        "q": "repo:{owner}/{repo} {idempotency_key} path:{events_path}"
+      },
+      "output": "search_result"
+    },
+    {
+      "id": "step_4d",
+      "name": "abort_if_duplicate",
+      "action": "conditional_abort",
+      "condition": "search_result.total_count > 0",
+      "output": "SKIPPED_DUPLICATE"
+    },
+    {
+      "id": "step_5",
+      "name": "create_event",
+      "action": "create_event_object",
+      "params": {
+        "type": "DOCUMENT_ADDED",
+        "idempotency_key": "idempotency_key",
+        "transaction_id": "transaction_id",
+        "prev_event": "graph.last_event"
+      },
+      "output": "event"
+    },
+    {
+      "id": "step_5b",
+      "name": "validate_event",
+      "action": "validate_schema",
+      "params": {
+        "schema": "event"
+      },
+      "input": "event"
+    },
+    {
+      "id": "step_6",
+      "name": "apply_event_to_graph",
+      "action": "merge_graph",
+      "inputs": ["graph", "event"],
+      "output": "updated_graph"
+    },
+    {
+      "id": "step_6b",
+      "name": "update_graph_metadata",
+      "action": "update_graph_meta",
+      "input": "updated_graph",
+      "output": "updated_graph"
+    },
+    {
+      "id": "step_6c",
+      "name": "finalize_graph_hash",
+      "action": "hash",
+      "input": "updated_graph",
+      "output": "graph_hash"
+    },
+    {
+      "id": "step_6d",
+      "name": "set_graph_hash",
+      "action": "set_field",
+      "params": {
+        "field": "hash",
+        "value": "graph_hash"
+      },
+      "input": "updated_graph",
+      "output": "updated_graph"
+    },
+    {
+      "id": "step_7",
+      "name": "validate_graph",
+      "action": "validate_schema",
+      "params": {
+        "schema": "graph"
+      },
+      "input": "updated_graph"
+    },
+    {
+      "id": "step_8",
+      "name": "encode_graph",
+      "action": "encode_base64",
+      "input": "updated_graph",
+      "output": "encoded_graph"
+    },
+    {
+      "id": "step_9",
+      "name": "save_graph",
+      "action": "createOrUpdateFile",
+      "params": {
+        "path": "{graph_path}",
+        "content": "encoded_graph",
+        "sha": "sha",
+        "message": "update graph"
+      }
+    },
+    {
+      "id": "step_10",
+      "name": "encode_event",
+      "action": "encode_base64",
+      "input": "event",
+      "output": "encoded_event"
+    },
+    {
+      "id": "step_11",
+      "name": "save_event",
+      "action": "createOrUpdateFile",
+      "params": {
+        "path": "{events_path}{event.event_id}.json",
+        "content": "encoded_event",
+        "message": "add event"
+      }
+    },
+    {
+      "id": "step_12",
+      "name": "encode_document",
+      "action": "encode_base64",
+      "input": "input",
+      "output": "encoded_document"
+    },
+    {
+      "id": "step_13",
+      "name": "save_document",
+      "action": "createOrUpdateFile",
+      "params": {
+        "path": "{documents_path}{input.doc_id}.json",
+        "content": "encoded_document",
+        "message": "add document"
+      }
+    }
+  ],
+  "atomicity": {
+    "mode": "best_effort",
+    "order": ["graph", "event", "document"]
+  },
+  "tool_mapping": {
+    "getFileOrDirectory": "execution_tool.getFileOrDirectory",
+    "createOrUpdateFile": "execution_tool.createOrUpdateFile",
+    "searchCode": "execution_tool.searchCode"
+  },
+  "rules": [
+    "GET_BEFORE_WRITE",
+    "USE_SHA",
+    "USE_BASE64",
+    "NO_STEP_SKIP",
+    "NO_SIMULATION",
+    "WRITE_GRAPH_FIRST"
+  ],
+  "error_handling": {
+    "409": {
+      "description": "SHA mismatch",
+      "strategy": "RETRY",
+      "retry_steps": ["step_1", "step_9"]
+    }
+  },
+  "output": {
+    "status": "OK",
+    "returns": ["event.event_id"]
+  }
+}
