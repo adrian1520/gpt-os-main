@@ -1,0 +1,1024 @@
+openapi: 3.1.0
+info:
+  title: execution_tool (GitHub API adapter runtime)
+  version: "1.2"
+  description: >-
+    GitHub REST adapter for GPTs Actions used as durable JSON storage
+    (case graph, extracted pleadings, metadata, audit trail).
+servers:
+  - url: https://api.github.com
+paths:
+  /repos/{owner}/{repo}/contents/{path}:
+    get:
+      operationId: getFileOrDirectory
+      summary: Get file content or list directory entries
+      description: >-
+        Returns file metadata/content for files, or an array of directory items for folders.
+      parameters:
+        - name: owner
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: repo
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: path
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^[A-Za-z0-9._\-/]+$
+        - name: ref
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Branch name or commit SHA
+        - name: Accept
+          in: header
+          required: false
+          schema:
+            type: string
+            default: application/vnd.github+json
+      responses:
+        "200":
+          description: File metadata/content or directory listing
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/GitHubFileResponse"
+                  - type: array
+                    items:
+                      $ref: "#/components/schemas/GitHubDirectoryItem"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: File/folder not found
+        "500":
+          description: Internal server error
+      security:
+        - bearerAuth: []
+
+    put:
+      operationId: createOrUpdateFile
+      summary: Create or update file in GitHub
+      description: Requires sha when updating an existing file
+      parameters:
+        - name: owner
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: repo
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: path
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^[A-Za-z0-9._\-/]+$
+        - name: Accept
+          in: header
+          required: false
+          schema:
+            type: string
+            default: application/vnd.github+json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GitHubPutRequest"
+      responses:
+        "200":
+          description: File updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GitHubPutResponse"
+        "201":
+          description: File created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GitHubPutResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+        "409":
+          description: Conflict
+        "422":
+          description: Validation failed
+        "500":
+          description: Internal server error
+      security:
+        - bearerAuth: []
+
+    delete:
+      operationId: deleteFile
+      summary: Delete file in GitHub
+      description: Deletes file at path (requires current blob sha).
+      parameters:
+        - name: owner
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: repo
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: path
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^[A-Za-z0-9._\-/]+$
+        - name: Accept
+          in: header
+          required: false
+          schema:
+            type: string
+            default: application/vnd.github+json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GitHubDeleteRequest"
+      responses:
+        "200":
+          description: File deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GitHubDeleteResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+        "409":
+          description: Conflict
+        "422":
+          description: Validation failed
+      security:
+        - bearerAuth: []
+
+  /repos/{owner}/{repo}/git/trees/{tree_sha}:
+    get:
+      operationId: getTree
+      summary: Get repository tree (supports deep recursive mode)
+      description: >-
+        Use recursive=1 to fetch deep tree for folders/subfolders/files in a single call.
+      parameters:
+        - name: owner
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: repo
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: tree_sha
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Tree SHA or branch name (e.g. main)
+        - name: recursive
+          in: query
+          required: false
+          schema:
+            oneOf:
+              - type: string
+                enum: ["1"]
+              - type: integer
+                enum: [1]
+          description: Set to 1 for deep recursive listing
+        - name: Accept
+          in: header
+          required: false
+          schema:
+            type: string
+            default: application/vnd.github+json
+      responses:
+        "200":
+          description: Tree listing
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GitHubTreeResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Tree not found
+      security:
+        - bearerAuth: []
+
+  /repos/{owner}/{repo}/git/ref/heads/{branch}:
+    get:
+      operationId: getBranchRef
+      summary: Get branch reference (latest commit sha)
+      parameters:
+        - name: owner
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: repo
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: branch
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Branch ref details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GitHubRefResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Branch not found
+      security:
+        - bearerAuth: []
+
+  /repos/{owner}/{repo}/commits:
+    get:
+      operationId: listCommits
+      summary: List commits (history/audit for case updates)
+      parameters:
+        - name: owner
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: repo
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: sha
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Branch or commit SHA to start from
+        - name: path
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter commits touching a specific file/folder
+        - name: per_page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 30
+      responses:
+        "200":
+          description: Commit list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GitHubCommitListItem"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+      security:
+        - bearerAuth: []
+
+  /repos/{owner}/{repo}/compare/{basehead}:
+    get:
+      operationId: compareRefs
+      summary: Compare two refs (what changed between snapshots)
+      parameters:
+        - name: owner
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: repo
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: basehead
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Format base...head (e.g. main...feature-branch)
+      responses:
+        "200":
+          description: Comparison result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GitHubCompareResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Refs not found
+      security:
+        - bearerAuth: []
+
+  /search/code:
+    get:
+      operationId: searchCode
+      summary: Search JSON data by text/path in repository
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+          description: >-
+            GitHub search query, e.g. "repo:adrian1520/cyfrowe_akta sprawa_123 path:/cases/ extension:json"
+        - name: per_page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 30
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GitHubCodeSearchResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden / rate limited
+        "422":
+          description: Validation failed
+      security:
+        - bearerAuth: []
+
+components:
+  schemas:
+    GitHubPutRequest:
+      type: object
+      required:
+        - message
+        - content
+      properties:
+        message:
+          type: string
+        content:
+          type: string
+          description: Base64 encoded payload
+        encoding:
+          type: string
+          default: base64
+        branch:
+          type: string
+          default: main
+        sha:
+          type: string
+
+    GitHubDeleteRequest:
+      type: object
+      required:
+        - message
+        - sha
+      properties:
+        message:
+          type: string
+        sha:
+          type: string
+        branch:
+          type: string
+          default: main
+
+    GitHubFileResponse:
+      type: object
+      required:
+        - name
+        - path
+        - sha
+        - size
+        - url
+        - type
+      properties:
+        name:
+          type: string
+        path:
+          type: string
+        sha:
+          type: string
+        size:
+          type: integer
+          format: int64
+        url:
+          type: string
+        html_url:
+          type: string
+        git_url:
+          type: string
+        download_url:
+          oneOf:
+            - type: string
+            - type: "null"
+        type:
+          type: string
+          enum: [file, dir, symlink, submodule]
+        content:
+          oneOf:
+            - type: string
+            - type: "null"
+        encoding:
+          oneOf:
+            - type: string
+            - type: "null"
+
+    GitHubDirectoryItem:
+      type: object
+      required:
+        - name
+        - path
+        - sha
+        - type
+        - url
+      properties:
+        name:
+          type: string
+        path:
+          type: string
+        sha:
+          type: string
+        size:
+          type: integer
+          format: int64
+        type:
+          type: string
+          enum: [file, dir, symlink, submodule]
+        url:
+          type: string
+        html_url:
+          type: string
+        git_url:
+          type: string
+        download_url:
+          oneOf:
+            - type: string
+            - type: "null"
+
+    GitHubPutResponse:
+      type: object
+      required:
+        - content
+        - commit
+      properties:
+        content:
+          $ref: "#/components/schemas/GitHubFileResponse"
+        commit:
+          $ref: "#/components/schemas/GitHubCommitSummary"
+
+    GitHubDeleteResponse:
+      type: object
+      required:
+        - commit
+      properties:
+        commit:
+          $ref: "#/components/schemas/GitHubCommitSummary"
+
+    GitHubCommitSummary:
+      type: object
+      required:
+        - sha
+        - message
+        - url
+      properties:
+        sha:
+          type: string
+        message:
+          type: string
+        url:
+          type: string
+
+    GitHubTreeResponse:
+      type: object
+      required:
+        - sha
+        - tree
+        - truncated
+      properties:
+        sha:
+          type: string
+        truncated:
+          type: boolean
+        tree:
+          type: array
+          items:
+            $ref: "#/components/schemas/GitHubTreeItem"
+
+    GitHubTreeItem:
+      type: object
+      required:
+        - path
+        - mode
+        - type
+        - sha
+        - url
+      properties:
+        path:
+          type: string
+        mode:
+          type: string
+        type:
+          type: string
+          enum: [blob, tree, commit]
+        sha:
+          type: string
+        size:
+          type: integer
+          format: int64
+        url:
+          type: string
+
+    GitHubRefResponse:
+      type: object
+      required:
+        - ref
+        - object
+      properties:
+        ref:
+          type: string
+        node_id:
+          type: string
+        url:
+          type: string
+        object:
+          type: object
+          required:
+            - type
+            - sha
+            - url
+          properties:
+            type:
+              type: string
+            sha:
+              type: string
+            url:
+              type: string
+
+    GitHubCommitListItem:
+      type: object
+      required:
+        - sha
+        - commit
+        - url
+      properties:
+        sha:
+          type: string
+        url:
+          type: string
+        html_url:
+          type: string
+        commit:
+          type: object
+          required:
+            - message
+            - author
+          properties:
+            message:
+              type: string
+            author:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                date:
+                  type: string
+                  format: date-time
+
+    GitHubCompareResponse:
+      type: object
+      required:
+        - status
+        - ahead_by
+        - behind_by
+        - total_commits
+        - files
+      properties:
+        status:
+          type: string
+        ahead_by:
+          type: integer
+        behind_by:
+          type: integer
+        total_commits:
+          type: integer
+        files:
+          type: array
+          items:
+            type: object
+            properties:
+              filename:
+                type: string
+              status:
+                type: string
+              additions:
+                type: integer
+              deletions:
+                type: integer
+              changes:
+                type: integer
+
+    GitHubCodeSearchResponse:
+      type: object
+      required:
+        - total_count
+        - incomplete_results
+        - items
+      properties:
+        total_count:
+          type: integer
+        incomplete_results:
+          type: boolean
+        items:
+          type: array
+          items:
+            type: object
+            required:
+              - name
+              - path
+              - sha
+              - url
+              - repository
+            properties:
+              name:
+                type: string
+              path:
+                type: string
+              sha:
+                type: string
+              url:
+                type: string
+              git_url:
+                type: string
+              html_url:
+                type: string
+              repository:
+                type: object
+                properties:
+                  full_name:
+                    type: string
+                  private:
+                    type: boolean
+
+    ActorDetails:
+      type: object
+      required:
+        - id
+        - type
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [USER, COURT, SYSTEM]
+        role:
+          type: [string, "null"]
+          enum: [APPLICANT, JUDGE, LAWYER, SYSTEM, null]
+
+    CaseNode:
+      type: object
+      required: [id, type, data]
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [PERSON, DOCUMENT, EVENT, COURT, CLAIM]
+        data:
+          type: object
+
+    CaseEdge:
+      type: object
+      required: [from, to, type]
+      properties:
+        from:
+          type: string
+        to:
+          type: string
+        type:
+          type: string
+          enum: [RELATES_TO, CREATED_BY, INVOLVES, REFERS_TO]
+
+    CaseGraph:
+      type: object
+      required: [case_id, version, last_event, nodes, edges, meta, sha]
+      properties:
+        case_id:
+          type: string
+        version:
+          type: integer
+        last_event:
+          type: string
+        sha:
+          type: string
+        transaction_id:
+          type: [string, "null"]
+        locked_by:
+          type: [string, "null"]
+        nodes:
+          type: array
+          items:
+            $ref: "#/components/schemas/CaseNode"
+        edges:
+          type: array
+          items:
+            $ref: "#/components/schemas/CaseEdge"
+        meta:
+          type: object
+          required: [created_at, updated_at, status]
+          properties:
+            created_at:
+              type: string
+              format: date-time
+            updated_at:
+              type: string
+              format: date-time
+            status:
+              type: string
+              enum: [ACTIVE, CLOSED, SUSPENDED]
+        hash:
+          type: string
+
+    CaseEvent:
+      type: object
+      required:
+        - event_id
+        - type
+        - timestamp
+        - actor
+        - payload
+        - idempotency_key
+        - transaction_id
+        - actor_details
+      properties:
+        event_id:
+          type: string
+        type:
+          type: string
+          enum:
+            - CASE_CREATED
+            - DOCUMENT_ADDED
+            - DOCUMENT_UPDATED
+            - NODE_ADDED
+            - EDGE_ADDED
+            - STATUS_CHANGED
+        timestamp:
+          type: string
+          format: date-time
+        actor:
+          type: string
+          enum: [SYSTEM, USER, COURT]
+        actor_details:
+          $ref: "#/components/schemas/ActorDetails"
+        payload:
+          type: object
+          required: [doc_id]
+          properties:
+            doc_id:
+              type: string
+            type:
+              type: string
+            source:
+              type: string
+        prev_event:
+          type: [string, "null"]
+        idempotency_key:
+          type: string
+        transaction_id:
+          type: string
+        hash:
+          type: string
+
+    CaseDocument:
+      type: object
+      required:
+        - doc_id
+        - type
+        - content
+        - created_at
+        - idempotency_key
+        - transaction_id
+        - actor_details
+      properties:
+        doc_id:
+          type: string
+        type:
+          type: string
+          enum:
+            - WNIOSEK
+            - POSTANOWIENIE
+            - PISMO_PROCESOWE
+            - UZASADNIENIE
+            - DOWOD
+            - INNE
+        source:
+          type: string
+          enum: [COURT, USER, SYSTEM]
+        actor_details:
+          $ref: "#/components/schemas/ActorDetails"
+        content:
+          type: string
+        metadata:
+          type: object
+          properties:
+            signature:
+              type: string
+            date:
+              type: string
+              format: date
+        created_at:
+          type: string
+          format: date-time
+        idempotency_key:
+          type: string
+        transaction_id:
+          type: string
+        hash:
+          type: string
+
+    LegalCaseStorageEnvelope:
+      type: object
+      properties:
+        graph:
+          $ref: "#/components/schemas/CaseGraph"
+        event:
+          $ref: "#/components/schemas/CaseEvent"
+        document:
+          $ref: "#/components/schemas/CaseDocument"
+      minProperties: 1
+      maxProperties: 1
+
+    AutoPipelineContract:
+      type: object
+      required: [pipeline, version, mode, input, context, steps, tool_mapping, rules]
+      properties:
+        pipeline:
+          type: string
+          enum: [AUTO_PIPELINE]
+        version:
+          type: string
+        mode:
+          type: string
+          enum: [WRITE, READ]
+        input:
+          type: object
+          properties:
+            type:
+              type: string
+            required_fields:
+              type: array
+              items:
+                type: string
+        context:
+          type: object
+          properties:
+            base_path:
+              type: string
+            graph_path:
+              type: string
+            events_path:
+              type: string
+            documents_path:
+              type: string
+        steps:
+          type: array
+          items:
+            type: object
+            required: [id, name, action]
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              action:
+                type: string
+              params:
+                type: object
+              input:
+                type: string
+              inputs:
+                type: array
+                items:
+                  type: string
+              output:
+                type: string
+        tool_mapping:
+          type: object
+          additionalProperties:
+            type: string
+        rules:
+          type: array
+          items:
+            type: string
+
+    DashboardPipelineContract:
+      type: object
+      required: [pipeline, version, mode, input, context, steps, tool_mapping, rules]
+      properties:
+        pipeline:
+          type: string
+          enum: [DASHBOARD]
+        version:
+          type: string
+        mode:
+          type: string
+          enum: [READ]
+        input:
+          type: object
+          properties:
+            type:
+              type: string
+            required_fields:
+              type: array
+              items:
+                type: string
+        context:
+          type: object
+          properties:
+            graph_path:
+              type: string
+        steps:
+          type: array
+          items:
+            type: object
+            required: [id, name, action]
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              action:
+                type: string
+              params:
+                type: object
+              input:
+                type: string
+              inputs:
+                type: array
+                items:
+                  type: string
+              output:
+                type: string
+        tool_mapping:
+          type: object
+          additionalProperties:
+            type: string
+        rules:
+          type: array
+          items:
+            type: string
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: PAT
