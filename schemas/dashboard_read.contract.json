@@ -1,0 +1,43 @@
+{
+  "pipeline": "DASHBOARD",
+  "version": "1.17",
+  "mode": "READ",
+  "input": {"type": "query", "required_fields": ["case_id"]},
+  "context": {
+    "owner": "adrian1520",
+    "repo": "cyfrowe_akta",
+    "branch": "main",
+    "graph_path": "cases/{case_id}/graph.json"
+  },
+  "steps": [
+    {"id": "step_1", "name": "load_graph", "action": "getFileOrDirectory", "params": {"path": "{graph_path}"}, "output": "graph_file"},
+    {"id": "step_2a", "name": "validate_file_content", "action": "assert_not_null", "input": "graph_file.content", "error": "GRAPH_NOT_FOUND"},
+    {"id": "step_2b", "name": "validate_encoding", "action": "assert_equals", "params": {"value": "base64"}, "input": "graph_file.encoding", "error": "INVALID_ENCODING"},
+    {"id": "step_2", "name": "decode_graph", "action": "decode_base64", "input": "graph_file.content", "output": "graph"},
+    {"id": "step_3", "name": "validate_graph", "action": "validate_schema", "params": {"schema": "graph"}, "input": "graph"},
+    {"id": "step_3b", "name": "validate_graph_not_empty", "action": "assert_not_empty", "input": "graph.nodes", "error": "EMPTY_GRAPH"},
+    {"id": "step_4", "name": "extract_core_state", "action": "extract_fields", "params": {"fields": ["case_id", "version", "last_event", "meta.status", "meta.updated_at"]}, "input": "graph", "output": "core_state"},
+    {"id": "step_5", "name": "compute_metrics", "action": "compute_metrics", "input": "graph", "output": "metrics", "on_error": "USE_DEFAULT_METRICS"},
+    {"id": "step_5b", "name": "apply_metrics_fallback", "action": "apply_fallback", "condition": "metrics.documents_count == 0 && metrics.events_count == 0", "fallback": "USE_DEFAULT_METRICS", "output": "metrics"},
+    {"id": "step_6", "name": "build_timeline", "action": "build_timeline_from_graph", "input": "graph", "output": "timeline"},
+    {"id": "step_6b", "name": "timeline_fallback", "action": "apply_fallback", "condition": "timeline == null", "fallback": "TIMELINE_EMPTY", "output": "timeline"},
+    {"id": "step_6c", "name": "limit_timeline", "action": "slice", "params": {"limit": 5}, "input": "timeline", "output": "timeline"},
+    {"id": "step_6d", "name": "timeline_empty_check", "action": "apply_fallback", "condition": "timeline.length == 0", "fallback": "TIMELINE_EMPTY", "output": "timeline"},
+    {"id": "step_7", "name": "build_dashboard", "action": "dashboard_engine", "inputs": ["core_state", "metrics", "timeline"], "output": "dashboard"},
+    {"id": "step_7b", "name": "normalize_dashboard", "action": "normalize_dashboard_shape", "input": "dashboard", "output": "dashboard"},
+    {"id": "step_8", "name": "render_ui", "action": "render_dashboard_ui", "input": "dashboard", "output": "ui"}
+  ],
+  "tool_mapping": {"getFileOrDirectory": "execution_tool.getFileOrDirectory"},
+  "rules": ["READ_ONLY", "NO_WRITE", "NO_SHA_REQUIRED", "NO_SIMULATION"],
+  "error_handling": {
+    "GRAPH_NOT_FOUND": {"description": "Graph file missing or empty", "strategy": "FAIL_FAST"},
+    "INVALID_ENCODING": {"description": "File encoding is not base64", "strategy": "FAIL_FAST"},
+    "EMPTY_GRAPH": {"description": "Graph contains no nodes", "strategy": "FAIL_FAST"},
+    "USE_DEFAULT_METRICS": {"description": "Fallback to default metrics when computation fails", "strategy": "CONTINUE_WITH_DEFAULTS"}
+  },
+  "fallbacks": {
+    "USE_DEFAULT_METRICS": {"metrics": {"documents_count": 0, "events_count": 0, "nodes_count": 0, "edges_count": 0}},
+    "TIMELINE_EMPTY": {"timeline": []}
+  },
+  "output": {"status": "OK", "returns": ["ui"]}
+}
