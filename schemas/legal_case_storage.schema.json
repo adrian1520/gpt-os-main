@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/schemas/legal_case_storage.schema.json",
+  "title": "Legal Case Storage Envelope",
+  "type": "object",
+  "oneOf": [
+    {"required": ["graph"], "properties": {"graph": {"$ref": "#/$defs/CaseGraph"}}, "additionalProperties": false},
+    {"required": ["event"], "properties": {"event": {"$ref": "#/$defs/CaseEvent"}}, "additionalProperties": false},
+    {"required": ["document"], "properties": {"document": {"$ref": "#/$defs/CaseDocument"}}, "additionalProperties": false}
+  ],
+  "$defs": {
+    "ActorDetails": {
+      "type": "object",
+      "required": ["id", "type"],
+      "properties": {
+        "id": {"type": "string"},
+        "type": {"type": "string", "enum": ["USER", "COURT", "SYSTEM"]},
+        "role": {"type": ["string", "null"], "enum": ["APPLICANT", "JUDGE", "LAWYER", "SYSTEM", null]}
+      },
+      "additionalProperties": true
+    },
+    "CaseNode": {
+      "type": "object",
+      "required": ["id", "type", "data"],
+      "properties": {
+        "id": {"type": "string"},
+        "type": {"type": "string", "enum": ["PERSON", "DOCUMENT", "EVENT", "COURT", "CLAIM"]},
+        "data": {"type": "object"}
+      },
+      "additionalProperties": true
+    },
+    "CaseEdge": {
+      "type": "object",
+      "required": ["from", "to", "type"],
+      "properties": {
+        "from": {"type": "string"},
+        "to": {"type": "string"},
+        "type": {"type": "string", "enum": ["RELATES_TO", "CREATED_BY", "INVOLVES", "REFERS_TO"]}
+      },
+      "additionalProperties": true
+    },
+    "CaseGraph": {
+      "type": "object",
+      "required": ["case_id", "version", "last_event", "nodes", "edges", "meta"],
+      "properties": {
+        "case_id": {"type": "string"},
+        "version": {"type": "integer"},
+        "last_event": {"type": "string"},
+        "sha": {"type": "string"},
+        "transaction_id": {"type": ["string", "null"]},
+        "locked_by": {"type": ["string", "null"]},
+        "nodes": {"type": "array", "items": {"$ref": "#/$defs/CaseNode"}},
+        "edges": {"type": "array", "items": {"$ref": "#/$defs/CaseEdge"}},
+        "meta": {
+          "type": "object",
+          "required": ["created_at", "updated_at", "status"],
+          "properties": {
+            "created_at": {"type": "string", "format": "date-time"},
+            "updated_at": {"type": "string", "format": "date-time"},
+            "status": {"type": "string", "enum": ["ACTIVE", "CLOSED", "SUSPENDED"]}
+          }
+        },
+        "hash": {"type": "string"}
+      },
+      "additionalProperties": true
+    },
+    "CaseEvent": {
+      "type": "object",
+      "required": ["event_id", "type", "timestamp", "actor", "actor_details", "payload", "idempotency_key", "transaction_id"],
+      "properties": {
+        "event_id": {"type": "string"},
+        "type": {"type": "string"},
+        "timestamp": {"type": "string", "format": "date-time"},
+        "actor": {"type": "string", "enum": ["SYSTEM", "USER", "COURT"]},
+        "actor_details": {"$ref": "#/$defs/ActorDetails"},
+        "payload": {"type": "object", "required": ["doc_id"], "properties": {"doc_id": {"type": "string"}}},
+        "prev_event": {"type": ["string", "null"]},
+        "idempotency_key": {"type": "string"},
+        "transaction_id": {"type": "string"},
+        "hash": {"type": "string"}
+      },
+      "additionalProperties": true
+    },
+    "CaseDocument": {
+      "type": "object",
+      "required": ["doc_id", "type", "content", "created_at", "idempotency_key", "transaction_id", "actor_details"],
+      "properties": {
+        "doc_id": {"type": "string"},
+        "type": {"type": "string"},
+        "source": {"type": "string", "enum": ["COURT", "USER", "SYSTEM"]},
+        "actor_details": {"$ref": "#/$defs/ActorDetails"},
+        "content": {"type": "string"},
+        "metadata": {"type": "object"},
+        "created_at": {"type": "string", "format": "date-time"},
+        "idempotency_key": {"type": "string"},
+        "transaction_id": {"type": "string"},
+        "hash": {"type": "string"}
+      },
+      "additionalProperties": true
+    }
+  }
+}
